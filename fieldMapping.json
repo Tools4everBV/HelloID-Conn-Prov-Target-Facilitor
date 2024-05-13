@@ -1,0 +1,351 @@
+{
+  "Version": "v1",
+  "MappingFields": [
+    {
+      "Name": "DisplayName",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.DisplayName\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "NickName",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.Name.NickName\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "FamilyName",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.Name.FamilyName\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "UserName",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Disable",
+            "Create",
+            "Delete",
+            "Enable",
+            "Update"
+          ],
+          "MappingMode": "Complex",
+          "Value": "\"// Please enter the mapping logic to generate the username.\\r\\nfunction generateUsername() {\\r\\n    if (!Person || !Person.Name) {\\r\\n        return undefined;\\r\\n    }\\r\\n\\r\\n    const suffix = Iteration === 0 ? '' : Iteration;\\r\\n    const maxAttributeLength = 20 - suffix.toString().length;\\r\\n\\r\\n    const firstName = Person.Name.NickName;\\r\\n    const middleName = Person.Name.FamilyNamePrefix;\\r\\n    const lastName = Person.Name.FamilyName;\\r\\n\\r\\n    let userName = firstName + '.';\\r\\n\\r\\n    //Check if the middleName variable contains data\\r\\n    if (middleName) {\\r\\n        userName = userName + middleName.replace(/\\\\s+/g, '.') + '.';\\r\\n    }\\r\\n\\r\\n    userName = userName + lastName;\\r\\n\\r\\n    //Remove leading ...\\r\\n    userName = userName.replace(/^\\\\.+/, '');\\r\\n\\r\\n    //Convert to lower case\\r\\n    userName = userName.toLowerCase();\\r\\n\\r\\n    //Remove diacritical chars\\r\\n    userName = deleteDiacriticalMarks(userName);\\r\\n\\r\\n    //Remove specific chars\\r\\n    userName = userName.replace(/[^0-9a-zA-Z.]/g, '');\\r\\n\\r\\n    //Shorten string to maxAttributeLength minus iteration length\\r\\n    userName = userName.trim().substring(0, maxAttributeLength) + suffix;\\r\\n\\r\\n    //Remove tailing ...\\r\\n    userName = userName.replace(/\\\\.+$/, '');\\r\\n\\r\\n    return userName;\\r\\n}\\r\\n\\r\\ngenerateUsername();\"",
+          "UsedInNotifications": true,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "Title",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.PrimaryContract.Title.Name\"",
+          "UsedInNotifications": true,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "Department",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.PrimaryContract.Department.DisplayName\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "StartDate",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.PrimaryContract.StartDate\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "EndDate",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.PrimaryContract.EndDate\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "Manager",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.PrimaryManager.DisplayName\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "ExternalId",
+      "Description": "",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create"
+          ],
+          "MappingMode": "Complex",
+          "Value": "\"function getExternalId() {\\r\\n    return Math.floor(Math.random() * Math.pow(2, 52));\\r\\n}\\r\\n\\r\\ngetExternalId();\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        },
+        {
+          "MapForActions": [
+            "Delete",
+            "Enable",
+            "Disable"
+          ],
+          "MappingMode": "None",
+          "Value": "\"\"",
+          "UsedInNotifications": true,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "costcentreexternalid",
+      "Description": "costcenterexternalid",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Fixed",
+          "Value": "\"1\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "departmentexternalid",
+      "Description": "Externalid",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Fixed",
+          "Value": "\"89\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "employeenumber",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.ExternalId\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "firstname",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.Name.GivenName\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "function",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Fixed",
+          "Value": "\"Specialist OV\"",
+          "UsedInNotifications": true,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "lastname",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.Name.FamilyName\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "locationcode",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.Location.Code\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "mobile",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.Contact.Business.Phone.Mobile\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "phone",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.Contact.Business.Phone.Fixed\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "email",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Field",
+          "Value": "\"Person.Contact.Business.Email\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    }
+  ],
+  "UniqueFieldNames": []
+}
