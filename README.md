@@ -1,12 +1,6 @@
 
 # HelloID-Conn-Prov-Target-Facilitor
 
-This connector is not yet ready:
-1. the create and update, enable and disable scripts work and are tested, but the Costcentre and Department properties unique identifieers are not yet determined  (currently using a hardcoded "id" of the department and ignoring the  costcenterexternalid and departmentexternalid parameters )
-2. The grand/revoke scripts are not yet implemented because the call to the target system does not update the rights
-3. for more info see https://dev.azure.com/t4e/Connectors/_workitems/edit/22711
-
-
 | :information_source: Information                                                                                                                                                                                                                                                                                                                                                       |
 | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | This repository contains the connector and configuration code only. The implementer is responsible to acquire the connection details such as username, password, certificate, etc. You might even need to sign a contract or agreement with the supplier before implementing this connector. Please contact the client's application manager to coordinate the connector requirements. |
