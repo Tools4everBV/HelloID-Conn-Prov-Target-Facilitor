@@ -1,9 +1,8 @@
 
 # HelloID-Conn-Prov-Target-Facilitor
 
-| :information_source: Information                                                                                                                                                                                                                                                                                                                                                       |
-| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| This repository contains the connector and configuration code only. The implementer is responsible to acquire the connection details such as username, password, certificate, etc. You might even need to sign a contract or agreement with the supplier before implementing this connector. Please contact the client's application manager to coordinate the connector requirements. |
+> [!IMPORTANT]
+> This repository contains the connector and configuration code only. The implementer is responsible to acquire the connection details such as username, password, certificate, etc. You might even need to sign a contract or agreement with the supplier before implementing this connector. Please contact the client's application manager to coordinate the connector requirements.
 
 <p align="center">
   <img src="https://facilitor.nl/wp-content/uploads/2019/12/Facilitor_logo_CMYK_FMS_blauw_oranje-382x95.jpg">
@@ -90,32 +89,21 @@ The following settings are required to connect to the API.
 
 ### Remarks
 
-#### `Department` & `CostCentre` validation
+#### `Department` & `CostCentre` mapping
 
-During account creation, both the `Department` & `CostCentre` will be validated on existence within _Facililtor_.
+Both the costcenter and department use mappings to align HR data with the correct id within Facilitor. The connector will verify if these exist; if not, an error will be thrown and the account will not be created.
 
-| :exclamation Note, department and costcenter selection is not yet determined, currently using a hardcoded id, instead of wat is listed elseware in this document|
-|---------------------------------------------------------------|
+The CostCentre is mapped based on the `Person.PrimaryContract.CostCenter.ExternalId`.
+The Department is validated using the id from the `Person.PrimaryContract.Department.ExternalId` object.
 
-- The `CostCentre` is validated based on the `Person.PrimaryContract.CostCenter.ExternalId`. The result of this validation is a `costCentre` object containing the `id`.
-- The `Department` will then be validated based on the `id` from the `costCentre` object.
-
-
-Both the `costCentre` and `department` must exists within _Facilitor_.
-
-When either of these validations fail, the account will not be created.
-If the account does already exist, then the department will not be updated with the new value in this case, but the other attributes will be updated as normal.
-
-
-#### `locationcode`
-
-Locations can only be used in combination with: `building`, `floor` and `room`. Because the `building`, `floor` and `room` data might absent within the HR source, the _locationcode_ is currently not available within the connector.
+A default mapping for both is included.
 
 #### Enable / Disable
 
 Both the _enable_ and _disable_ lifecycle actions, will set the `deactivated` property. The value of this property is a `[DateTime]` string in format: `yyyy-MM-ddTHH:mm:ssZ`.
 
-- ℹ️ Within the _disable_ lifecycle action, the value will be set to the current date.
+> [!TIP]
+> Within the _disable_ lifecycle action, the value will be set to the current date.
 
 #### Updating using a _HTTP.PUT_
 
@@ -123,9 +111,11 @@ Updating the account is based on a _HTTP.PUT_. A partial _PUT_ is supported with
 
 ## Getting help
 
-> ℹ️ _For more information on how to configure a HelloID PowerShell V2 connector, please refer to our [documentation](https://docs.helloid.com/en/provisioning/target-systems/powershell-v2-target-systems.html) pages_
+> [!TIP]
+> _For more information on how to configure a HelloID PowerShell connector, please refer to our [documentation](https://docs.helloid.com/en/provisioning/target-systems/powershell-v2-target-systems.html) pages_.
 
-> ℹ️ _If you need help, feel free to ask questions on our [forum](https://forum.helloid.com)_
+> [!TIP]
+>  _If you need help, feel free to ask questions on our [forum](https://forum.helloid.com)_.
 
 ## HelloID docs
 
