@@ -7,12 +7,6 @@
 # Enable TLS1.2
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
 
-# Set debug logging
-switch ($($config.IsDebug)) {
-    $true { $VerbosePreference = 'Continue' }
-    $false { $VerbosePreference = 'SilentlyContinue' }
-}
-
 #region functions
 function Invoke-FacilitorRestMethod {
     [CmdletBinding()]
@@ -61,7 +55,7 @@ function Invoke-FacilitorRestMethod {
                     ContentType = $ContentType
                 }
                 if ($Body) {
-                    Write-Verbose 'Adding body to request'
+                    write-information 'Adding body to request'
                     $splatParams['Body'] = $Body
                 }
                 $partialResult = Invoke-RestMethod @splatParams -Verbose:$false
@@ -97,17 +91,28 @@ function Resolve-FacilitorError {
         }
 
         try {
+            #  Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
-                $httpErrorObj.FriendlyMessage = ($ErrorObject.ErrorDetails.Message | ConvertFrom-Json)
+
             } elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
-                $streamReaderResponse = [System.IO.StreamReader]::new($ErrorObject.Exception.Response.GetResponseStream()).ReadToEnd()
-                if ($null -ne $streamReaderResponse) {
-                    $httpErrorObj.ErrorDetails = $streamReaderResponse
+                if ($null -ne $ErrorObject.Exception.Response) {
+                    if ([string]::IsNullOrEmpty($ErrorObject.ErrorDetails.Message)) {
+
+                        $streamReaderResponse = [System.IO.StreamReader]::new($ErrorObject.Exception.Response.GetResponseStream()).ReadToEnd()
+                        if ($null -ne $streamReaderResponse) {
+                            $httpErrorObj.ErrorDetails = $streamReaderResponse
+                        }
+                    } else {
+                        $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
+                    }
                 }
             }
+             $errorDetailsObject = ($httpErrorObj.ErrorDetails | ConvertFrom-Json)
+            $httpErrorObj.FriendlyMessage = "$($errorDetailsObject.error.message)"
+
         } catch {
-            $httpErrorObj.FriendlyMessage = "Received an unexpected response. The JSON could not be converted, error: [$($_.Exception.Message)]. Original error from web service: [$($ErrorObject.Exception.Message)]"
+            $httpErrorObj.FriendlyMessage = $httpErrorObj.ErrorDetails
         }
         Write-Output $httpErrorObj
     }
@@ -115,18 +120,18 @@ function Resolve-FacilitorError {
 #endregion
 
 try {
-    Write-Verbose 'Adding authorization headers'
+    write-information 'Adding authorization headers'
     $authorization = "$($actionContext.Configuration.UserName):$($actionContext.Configuration.Password)"
     $base64Credentials = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($authorization))
     $splatParams = @{
+        Uri = "$($actionContext.Configuration.BaseUrl)/api2/authorizationgroups"
+        Method = 'GET'
         Headers = @{
             'Authorization' = "Basic $($base64Credentials)"
         }
     }
-    Write-Verbose 'Retrieving permissions'
-    $splatParams['Uri'] = "$($actionContext.Configuration.BaseUrl)/api2/authorizationgroups"
-    $splatParams['Method'] = 'GET'
-    $permissions = Invoke-FacilitorRestMethod @splatParams -Paging
+    write-information 'Retrieving permissions'
+    $permissions = Invoke-FacilitorRestMethod @splatParams -Paging 
     foreach ($permission in $permissions) {
         $outputContext.Permissions.Add(
             @{
@@ -143,8 +148,8 @@ try {
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
         $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
         $errorObj = Resolve-FacilitorError -ErrorObject $ex
-        Write-Verbose "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
+        write-information "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
     } else {
-        Write-Verbose "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
+        write-information "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
     }
 }

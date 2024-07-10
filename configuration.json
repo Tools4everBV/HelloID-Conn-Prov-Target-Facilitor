@@ -51,24 +51,13 @@
         }
     },
     {
-        "key": "IsDebug",
-        "type": "checkbox",
-        "defaultValue": true,
-        "templateOptions": {
-            "label": "Toggle debug logging",
-            "description": "When toggled, debug logging will be displayed",
-            "required": false
-        }
-    },
-    {
-        "key": "ProxyAddress",
+        "key": "LocationMappingFile",
         "type": "input",
+        "defaultValue": "",
         "templateOptions": {
-          "label": "ProxyAddress",
-          "placeholder": "http://localhost:8888",
-          "description": "The URL (or IP Address) to the ProxyServer in the network. Leave empty if no ProxyServer is being used",
-          "required": false
+            "label": "location Mapping File",
+            "description": "An additional Mapping file to determine the location that should be assigned to the Facilitor account",
+            "required": true
         }
     }
-
 ]
