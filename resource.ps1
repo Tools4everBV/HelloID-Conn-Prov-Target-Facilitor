@@ -23,7 +23,7 @@ function Resolve-FacilitorError {
         }
 
         try {
-            #  Collect ErrorDetails
+            # Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
 
@@ -74,19 +74,19 @@ function Get-FacilitorEmployeeFunctions {
     }
 
     $offset = 0
-    $total_count = $null
+    $totalCount = $null
     $allEmployeeFunctions = @()
 
     do {
-        $splatRetrieveEmployeeFunctionsParams['Uri'] = "$BaseUrl/api2/employeefunctions?limit=$limit&offset=$offset"
+        $splatRetrieveEmployeeFunctionsParams['Uri'] = "$BaseUrl/api2/employeefunctions?limit=$Limit&offset=$offset"
         $response = Invoke-RestMethod @splatRetrieveEmployeeFunctionsParams
 
         $allEmployeeFunctions += $response.employeefunctions
-        $offset += $limit
-        if ($null -eq $total_count) {
-            $total_count = $response.total_count
+        $offset += $Limit
+        if ($null -eq $totalCount) {
+            $totalCount = $response.total_count
         }
-    } while ($offset -lt $total_count)
+    } while ($offset -lt $totalCount)
 
     $allEmployeeFunctions
 }
@@ -123,14 +123,15 @@ try {
                         name = $resource
                     }
                 } | ConvertTo-Json
+
                 $splatCreateResourceParams = @{
                     Uri         = "$($actionContext.Configuration.BaseUrl)/api2/employeefunctions"
                     Method      = 'POST'
                     Headers     = $headers
                     ContentType = 'application/json'
-                    Body        = $employeeFunctionObject
+                    Body        = [System.Text.Encoding]::UTF8.GetBytes($employeeFunctionObject)
                 }
-                $null = Invoke-RestMethod @splatCreateResourceParams -verbose:$false
+                $null = Invoke-RestMethod @splatCreateResourceParams -Verbose:$false
                 $outputContext.AuditLogs.Add([PSCustomObject]@{
                         Message = "Created resource: [$($resource)]"
                         IsError = $false

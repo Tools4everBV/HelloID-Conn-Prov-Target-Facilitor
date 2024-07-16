@@ -34,7 +34,7 @@ function Get-MappedValueFromMappingFile {
             if ($null -eq $mappedProperty) {
                 throw "No $($CsvPropertyHeaderName) found corresponding to $($CsvPropertyHeaderName) ID [$($ContractPropertyExternalId)]"
             }
-            
+
             Write-Output $mappedProperty
         } catch {
             $PSCmdlet.ThrowTerminatingError($_)
@@ -67,12 +67,12 @@ function Get-FacilitorResource {
 
             $resultProperty = ([array](Invoke-RestMethod @splatGetProperty)).$($property)
             if ($resultProperty.count -eq 0) {
-                throw "No $($Property) found in target system corresponding to $($Property) ID [$($PropertyId)]"     
+                throw "No $($Property) found in target system corresponding to $($Property) ID [$($PropertyId)]"
             } elseif ($resultProperty.count -gt 1) {
                 throw "More than 1 $($Property) found in target system corresponding to $($Property) ID [$($PropertyId)]"
             }
 
-            Write-Output $resultProperty 
+            Write-Output $resultProperty
         } catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
@@ -95,15 +95,13 @@ function Resolve-FacilitorError {
         }
 
         try {
-            #  Collect ErrorDetails
+            # Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
 
             } elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
                 if ($null -ne $ErrorObject.Exception.Response) {
                     if ([string]::IsNullOrEmpty($ErrorObject.ErrorDetails.Message)) {
-                        1
-
                         $streamReaderResponse = [System.IO.StreamReader]::new($ErrorObject.Exception.Response.GetResponseStream()).ReadToEnd()
                         if ($null -ne $streamReaderResponse) {
                             $httpErrorObj.ErrorDetails = $streamReaderResponse
@@ -139,7 +137,7 @@ function Add-AuditLog {
             $outputContext.AuditLogs.Add([PSCustomObject]@{
                     Message = $ErrorMessage
                     IsError = $IsError
-                })           
+                })
         } catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
@@ -182,11 +180,11 @@ try {
 
     $isValidationError = $false
 
-    Write-Information "Lookup Cost Centre via Mapping"
+    Write-Information 'Lookup Cost Centre via Mapping'
     try {
         $mappedCostCentre = Get-MappedValueFromMappingFile -CsvFileLocation $actionContext.Configuration.CostCentreMappingFile -ContractPropertyExternalId $actionContext.Data.mapping.costCenterId -CsvPropertyHeaderName "CostCenter"
-        $costcentre = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/costcentres?id=$($mappedCostCentre.FacilitorCostCenterId)" -Property "costcentre" -PropertyId $mappedCostCentre.FacilitorCostCenterId 
-        
+        $costcentre = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/costcentres?id=$($mappedCostCentre.FacilitorCostCenterId)" -Property "costcentre" -PropertyId $mappedCostCentre.FacilitorCostCenterId
+
         $actionContext.Data | Add-Member @{
             costcentre = [PSCustomObject]@{
                 id = $costcentre.id
@@ -194,10 +192,10 @@ try {
         } -Force
     } catch {
         $isValidationError = $true
-        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true           
+        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true
     }
 
-    Write-Information "Lookup Department via Mapping"
+    Write-Information 'Lookup Department via Mapping'
     try {
         $mappedDepartment = Get-MappedValueFromMappingFile -CsvFileLocation $actionContext.Configuration.DepartmentMappingFile -ContractPropertyExternalId $actionContext.Data.mapping.departmentId -CsvPropertyHeaderName "Department"
         $department = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/departments?id=$($mappedDepartment.FacilitorDepartmentId)" -Property "department" -PropertyId $mappedDepartment.FacilitorDepartmentId
@@ -210,26 +208,26 @@ try {
 
     } catch {
         $isValidationError = $true
-        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
+        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true
     }
 
-    Write-Information "Lookup Location via Mapping"
+    Write-Information 'Lookup Location via Mapping'
     try {
         $mappedLocation = Get-MappedValueFromMappingFile -CsvFileLocation $actionContext.Configuration.LocationMappingFile -ContractPropertyExternalId $actionContext.Data.mapping.locationId -CsvPropertyHeaderName "Location"
         $location = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/locations?id=$($mappedLocation.FacilitorlocationId)" -Property "location" -PropertyId $mappedLocation.FacilitorLocationId
-    
+
         $actionContext.Data.custom_fields = @(
             [PSCustomObject]@{
                 propertyid = 1080
                 value      = "$($location.id)"
-                Type       = "N"
+                Type       = 'N'
                 sequence   = 50
-                label      = "Locatie ID"
+                label      = 'Locatie ID'
             }
         )
     } catch {
         $isValidationError = $true
-        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
+        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true
     }
 
     if ($isValidationError) {
@@ -242,11 +240,6 @@ try {
         }
     } -Force
 
-
-    # only select location custom field for compareddd
-    $correlatedAccount.custom_fields = $correlatedAccount.custom_fields | Where-Object { $_.propertyid -eq 1080 }
-
-   
     # Always compare the account against the current account in target system
     if (($null -ne $correlatedAccount) -and ($isValidationError -eq $false)) {
         $splatCompareProperties = @{
@@ -270,6 +263,8 @@ try {
             $propertiesChanged['function'] = $actionContext.Data.function
         }
 
+        # only select location custom field for compared
+        $correlatedAccount.custom_fields = @($correlatedAccount.custom_fields | Where-Object { $_.propertyid -eq 1080 })
         if ($correlatedAccount.custom_fields.value -ne $actionContext.data.custom_fields.value) {
             $propertiesChanged['custom_fields'] = $actionContext.Data.custom_fields
         }
@@ -287,7 +282,7 @@ try {
 
     # Process
     switch ($action) {
-        'UpdateAccount' {  
+        'UpdateAccount' {
             Write-Information "Updating Facilitor account with accountReference: [$($actionContext.References.Account)], Account property(s) required to update: $($propertiesChanged.Keys -join ', ')"
 
             $body = @{
@@ -329,7 +324,7 @@ try {
 
         'ValidationError' {
             Write-Information 'Validation Error'
-            $outputContext.success = $false
+            $outputContext.Success = $false
             break
         }
 

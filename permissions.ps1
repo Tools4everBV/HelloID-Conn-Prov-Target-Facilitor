@@ -55,7 +55,6 @@ function Invoke-FacilitorRestMethod {
                     ContentType = $ContentType
                 }
                 if ($Body) {
-                    write-information 'Adding body to request'
                     $splatParams['Body'] = $Body
                 }
                 $partialResult = Invoke-RestMethod @splatParams -Verbose:$false
@@ -91,7 +90,7 @@ function Resolve-FacilitorError {
         }
 
         try {
-            #  Collect ErrorDetails
+            # Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
 
@@ -108,7 +107,7 @@ function Resolve-FacilitorError {
                     }
                 }
             }
-             $errorDetailsObject = ($httpErrorObj.ErrorDetails | ConvertFrom-Json)
+            $errorDetailsObject = ($httpErrorObj.ErrorDetails | ConvertFrom-Json)
             $httpErrorObj.FriendlyMessage = "$($errorDetailsObject.error.message)"
 
         } catch {
@@ -120,7 +119,7 @@ function Resolve-FacilitorError {
 #endregion
 
 try {
-    write-information 'Adding authorization headers'
+    Write-Information 'Adding authorization headers'
     $authorization = "$($actionContext.Configuration.UserName):$($actionContext.Configuration.Password)"
     $base64Credentials = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($authorization))
     $splatParams = @{
@@ -130,8 +129,8 @@ try {
             'Authorization' = "Basic $($base64Credentials)"
         }
     }
-    write-information 'Retrieving permissions'
-    $permissions = Invoke-FacilitorRestMethod @splatParams -Paging 
+    Write-Information 'Retrieving permissions'
+    $permissions = Invoke-FacilitorRestMethod @splatParams -Paging
     foreach ($permission in $permissions) {
         $outputContext.Permissions.Add(
             @{
@@ -148,8 +147,8 @@ try {
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
         $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
         $errorObj = Resolve-FacilitorError -ErrorObject $ex
-        write-information "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
+        Write-Information "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
     } else {
-        write-information "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
+        Write-Information "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
     }
 }

@@ -24,7 +24,7 @@ function Resolve-FacilitorError {
         }
 
         try {
-            #  Collect ErrorDetails
+            # Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
 
@@ -67,7 +67,7 @@ try {
         Authorization  = "Basic $($base64Credentials)"
     }
 
-    write-information  "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
+    Write-Information  "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
     try {
         $splatParams = @{
             Uri     = "$($actionContext.Configuration.BaseUrl)/api2/persons/$($actionContext.References.Account)?include=authorization"
@@ -93,7 +93,7 @@ try {
     # Process
     switch ($action) {
         'RevokePermission' {
-            write-information  "Revoking Facilitor permission: [$($actionContext.References.Permission.Reference)]"
+            Write-Information  "Revoking Facilitor permission: [$($actionContext.References.Permission.Reference)]"
             if ($correlatedAccount.person.authorization.authorizationgroup.id -Contains $actionContext.References.Permission.Reference) {
                 $authorizationBody = [array]($correlatedAccount.person.authorization | Where-Object { $_.authorizationgroup.id -ne $actionContext.References.Permission.Reference })
                 if ($null -eq $authorizationBody) {
@@ -136,7 +136,7 @@ try {
         }
     }
 } catch {
-    $outputContext.success = $false
+    $outputContext.Success = $false
     $ex = $PSItem
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
         $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
@@ -148,7 +148,6 @@ try {
         Write-Warning "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
     }
     $outputContext.AuditLogs.Add([PSCustomObject]@{
-            Action  = 'RevokePermission'
             Message = $auditMessage
             IsError = $true
         })

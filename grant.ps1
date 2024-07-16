@@ -24,7 +24,7 @@ function Resolve-FacilitorError {
         }
 
         try {
-            #  Collect ErrorDetails
+            # Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
 
@@ -66,7 +66,7 @@ try {
         Authorization  = "Basic $($base64Credentials)"
     }
 
-    write-information  "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
+    Write-Information  "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
     try {
         $splatParams = @{
             Uri     = "$($actionContext.Configuration.BaseUrl)/api2/persons/$($actionContext.References.Account)?include=authorization"
@@ -91,7 +91,7 @@ try {
     # Process
     switch ($action) {
         'RevokePermission' {
-            write-information  "Granting Facilitor entitlement: [$($actionContext.References.Permission.DisplayName)]"
+            Write-Information  "Granting Facilitor entitlement: [$($actionContext.References.Permission.DisplayName)]"
             if ($correlatedAccount.person.authorization.authorizationgroup.id -NotContains $actionContext.References.Permission.Reference) {
                 $correlatedAccount.person.authorization += [PSCustomObject]@{
                     authorizationgroup = [PSCustomObject]@{
@@ -117,7 +117,7 @@ try {
                     Message = 'Grant permission was successful'
                     IsError = $false
                 })
-    
+
             $outputContext.Success = $true
             break
         }
@@ -131,7 +131,7 @@ try {
         }
     }
 } catch {
-    $outputContext.success = $false
+    $outputContext.Success = $false
     $ex = $PSItem
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
         $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {

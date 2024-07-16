@@ -83,22 +83,6 @@
       ]
     },
     {
-      "Name": "email",
-      "Type": "Text",
-      "MappingActions": [
-        {
-          "MapForActions": [
-            "Create",
-            "Update"
-          ],
-          "MappingMode": "Complex",
-          "Value": "\"function getValue() {\\r\\n return Person.Accounts.MicrosoftActiveDirectory.Mail\\r\\n}\\r\\n\\r\\ngetValue();\"",
-          "UsedInNotifications": false,
-          "StoreInAccountData": false
-        }
-      ]
-    },
-    {
       "Name": "initials",
       "Description": "",
       "Type": "Text",
@@ -177,7 +161,7 @@
             "Update"
           ],
           "MappingMode": "None",
-          "Value": "\"\"",
+          "Value": "null",
           "UsedInNotifications": false,
           "StoreInAccountData": false
         }
@@ -228,6 +212,22 @@
           ],
           "MappingMode": "Complex",
           "Value": "\"// generateUserPrincipalNameOption1.js [https://github.com/Tools4everBV/HelloID-Lib-Prov-HelperFunctions/blob/master/Javascript/Target/UserPrincipalName/Scripts/generateUserPrincipalNameOption1.js]\\r\\n//\\r\\n// Mapping logic to generate the UserPrincipalName according to the following convention.\\r\\n// First choice\\t        B\\tjanine.vandenboele@domain.local\\r\\n// \\t                    BP\\tjanine.vandenboele@domain.local\\r\\n// \\t                    P\\tjanine.vandenboele@domain.local\\r\\n// \\t                    PB  janine.vandenboele@domain.local\\r\\n// If in use   \\t        B\\tj.vandenboele@domain.local\\r\\n// \\t                    BP\\tj.vandenboele@domain.local\\r\\n// \\t                    P\\tj.vandenboele@domain.local\\r\\n// \\t                    PB  j.vandenboele@domain.local\\r\\n// If also in use   \\tB\\tjanine.vandenboele2@domain.local\\r\\n// \\t                    BP\\tjanine.vandenboele2@domain.local\\r\\n// \\t                    P\\tjanine.vandenboele2@domain.local\\r\\n// \\t                    PB  janine.vandenboele2@domain.local\\r\\n// etc.\\r\\nfunction generateUserPrincipalName() {\\r\\n    let nickName = Person.Name.NickName;\\r\\n    let middleName = Person.Name.FamilyNamePrefix;\\r\\n    let lastName = Person.Name.FamilyName;\\r\\n    let convention = Person.Name.Convention;\\r\\n\\r\\n    let mailNickName = '';\\r\\n    if (Iteration === 0) {\\r\\n        mailNickName = nickName + '.';\\r\\n    } else if (Iteration === 1) {\\r\\n        mailNickName = nickName.substring(0, 1) + '.';\\r\\n    } else {\\r\\n        mailNickName = nickName + '.';\\r\\n    }\\r\\n\\r\\n    switch (convention) {\\r\\n        case \\\"P\\\":\\r\\n        case \\\"PB\\\":\\r\\n        case \\\"B\\\":\\r\\n        case \\\"BP\\\":\\r\\n        default:\\r\\n            if (typeof middleName !== 'undefined' && middleName) { mailNickName = mailNickName + middleName.replace(/ /g, '') }\\r\\n            mailNickName = mailNickName + lastName;\\r\\n            break;\\r\\n    }\\r\\n    // Trim spaces at start and end\\r\\n    mailNickName = mailNickName.trim();\\r\\n\\r\\n    // Convert to lower case\\r\\n    mailNickName = mailNickName.toLowerCase();\\r\\n\\r\\n    // Remove diacritical chars\\r\\n    mailNickName = deleteDiacriticalMarks(mailNickName);\\r\\n\\r\\n    // Remove blank chars and \\\"'\\\"\\r\\n    mailNickName = mailNickName.replace(/[^0-9a-zA-Z.\\\\-_]/g, '');\\r\\n\\r\\n    // Shorten string to maxAttributeLength minus iteration length\\r\\n    let suffix = ''\\r\\n    let iterationToUse = Iteration - 1 === 0 ? '' : (Iteration)\\r\\n    suffix = Iteration === 0 ? '' : (iterationToUse);\\r\\n    const domain = 'domain.local';\\r\\n    const maxAttributeLength = (256 - suffix.toString().length - domain.toString().length);\\r\\n    mailNickName = mailNickName.substring(0, maxAttributeLength);\\r\\n\\r\\n    // Use the iterator if needed\\r\\n    mailNickName = mailNickName + suffix;\\r\\n    let upn = mailNickName + '@' + domain;\\r\\n    return upn.toUpperCase();\\r\\n}\\r\\n\\r\\ngenerateUserPrincipalName();\"",
+          "UsedInNotifications": false,
+          "StoreInAccountData": false
+        }
+      ]
+    },
+    {
+      "Name": "email",
+      "Type": "Text",
+      "MappingActions": [
+        {
+          "MapForActions": [
+            "Create",
+            "Update"
+          ],
+          "MappingMode": "Complex",
+          "Value": "\"function getValue() {\\r\\n return Person.Accounts.MicrosoftActiveDirectory.Mail\\r\\n}\\r\\n\\r\\ngetValue();\"",
           "UsedInNotifications": false,
           "StoreInAccountData": false
         }

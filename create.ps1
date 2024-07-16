@@ -31,7 +31,6 @@ function Get-MappedValueFromMappingFile {
             if ($null -eq $mappedProperty) {
                 throw "No $($CsvPropertyHeaderName) found corresponding to $($CsvPropertyHeaderName) ID [$($ContractPropertyExternalId)]"
             }
-            
             Write-Output $mappedProperty
         } catch {
             $PSCmdlet.ThrowTerminatingError($_)
@@ -64,12 +63,12 @@ function Get-FacilitorResource {
 
             $resultProperty = ([array](Invoke-RestMethod @splatGetProperty)).$($property)
             if ($resultProperty.count -eq 0) {
-                throw "No $($Property) found in target system corresponding to $($Property) ID [$($PropertyId)]"     
+                throw "No $($Property) found in target system corresponding to $($Property) ID [$($PropertyId)]"
             } elseif ($resultProperty.count -gt 1) {
                 throw "More than 1 $($Property) found in target system corresponding to $($Property) ID [$($PropertyId)]"
             }
 
-            Write-Output $resultProperty 
+            Write-Output $resultProperty
         } catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
@@ -92,7 +91,7 @@ function Resolve-FacilitorError {
         }
 
         try {
-            #  Collect ErrorDetails
+            # Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
 
@@ -135,7 +134,7 @@ function Add-AuditLog {
             $outputContext.AuditLogs.Add([PSCustomObject]@{
                     Message = $ErrorMessage
                     IsError = $IsError
-                })           
+                })
         } catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
@@ -174,7 +173,7 @@ try {
             $correlatedAccount = $personResult.persons | Select-Object -First 1
         } elseif ($personResult.total_count -gt 1 ) {
             throw "Multiple accounts found with Correlation: $correlationField = $correlationValue"
-        } 
+        }
     }
 
     if ($null -eq $correlatedAccount) {
@@ -185,22 +184,22 @@ try {
 
     if ($action -eq 'CreateAccount') {
         $isValidationError = $false
-            
-        Write-Information "Lookup Cost Centre via Mapping"
+
+        Write-Information 'Lookup Cost Centre via Mapping'
         try {
             $mappedCostCentre = Get-MappedValueFromMappingFile -CsvFileLocation $actionContext.Configuration.CostCentreMappingFile -ContractPropertyExternalId $actionContext.Data.mapping.costCenterId -CsvPropertyHeaderName "CostCenter"
-            $costcentre = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/costcentres?id=$($mappedCostCentre.FacilitorCostCenterId)" -Property "costcentre" -PropertyId $mappedCostCentre.FacilitorCostCenterId 
-                
+            $costcentre = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/costcentres?id=$($mappedCostCentre.FacilitorCostCenterId)" -Property "costcentre" -PropertyId $mappedCostCentre.FacilitorCostCenterId
+
             $costCentreValue = @{
                 id = $costcentre.id
             }
-            $actionContext.Data | Add-Member -MemberType NoteProperty -Name "costcentre" -Value $costCentreValue
+            $actionContext.Data | Add-Member -MemberType NoteProperty -Name 'costcentre' -Value $costCentreValue
         } catch {
             $isValidationError = $true
-            Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true           
+            Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true
         }
 
-        Write-Information "Lookup Department via Mapping"
+        Write-Information 'Lookup Department via Mapping'
         try {
             $mappedDepartment = Get-MappedValueFromMappingFile -CsvFileLocation $actionContext.Configuration.DepartmentMappingFile -ContractPropertyExternalId $actionContext.Data.mapping.departmentId -CsvPropertyHeaderName "Department"
             $department = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/departments?id=$($mappedDepartment.FacilitorDepartmentId)" -Property "department" -PropertyId $mappedDepartment.FacilitorDepartmentId
@@ -208,13 +207,13 @@ try {
             $departmentValue = @{
                 id = $department.id
             }
-            $actionContext.Data | Add-Member -MemberType NoteProperty -Name "department" -Value $departmentValue
+            $actionContext.Data | Add-Member -MemberType NoteProperty -Name 'department' -Value $departmentValue
         } catch {
             $isValidationError = $true
-            Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
+            Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true
         }
 
-        Write-Information "Lookup Location via Mapping"
+        Write-Information 'Lookup Location via Mapping'
         try {
             $mappedLocation = Get-MappedValueFromMappingFile -CsvFileLocation $actionContext.Configuration.LocationMappingFile -ContractPropertyExternalId $actionContext.Data.mapping.locationId -CsvPropertyHeaderName "Location"
             $location = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/locations?id=$($mappedLocation.FacilitorlocationId)" -Property "location" -PropertyId $mappedLocation.FacilitorLocationId
@@ -222,21 +221,20 @@ try {
                 [PSCustomObject]@{
                     propertyid = 1080
                     value      = "$($location.id)"
-                    Type       = "N"
+                    Type       = 'N'
                     sequence   = 50
-                    label      = "Locatie ID"
+                    label      = 'Locatie ID'
                 }
             )
         } catch {
             $isValidationError = $true
-            Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
+            Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true
         }
 
         if ($isValidationError) {
             $action = 'ValidationError'
         }
     }
-
 
     # Process
     switch ($action) {
@@ -265,23 +263,23 @@ try {
                 $outputContext.AccountReference = $createPersonResult.person.id
                 $outputContext.data = $createPersonResult.person
             }
-            
+
             $outputContext.Success = $true
             $outputContext.AuditLogs.Add([PSCustomObject]@{
                     Message = "Create account was successful. AccountReference is: [$($outputContext.AccountReference)]"
                     IsError = $false
                 })
             break
-        } 
+        }
 
         'CorrelateAccount' {
             Write-Information 'Correlating Facilitor account'
             $outputContext.AccountReference = $correlatedAccount.id
             $outputContext.data = $correlatedAccount.person
 
-            $outputContext.success = $true
+            $outputContext.Success = $true
             $outputContext.AuditLogs.Add([PSCustomObject]@{
-                    Action  = "CorrelateAccount"
+                    Action  = 'CorrelateAccount'
                     Message = "Correlated account: [$($correlatedAccount.id)] on field: [$($correlationField)] with value: [$($correlationValue)]"
                     IsError = $false
                 })
@@ -290,12 +288,12 @@ try {
 
         'ValidationError' {
             Write-Information 'Validation Error'
-            $outputContext.success = $false
+            $outputContext.Success = $false
             break
         }
     }
 } catch {
-    $outputContext.success = $false
+    $outputContext.Success = $false
     $ex = $PSItem
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
         $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {

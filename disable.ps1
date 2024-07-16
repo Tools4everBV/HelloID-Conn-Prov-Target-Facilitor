@@ -24,7 +24,7 @@ function Resolve-FacilitorError {
         }
 
         try {
-            #  Collect ErrorDetails
+            # Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
 
@@ -66,7 +66,7 @@ try {
         Authorization  = "Basic $($base64Credentials)"
     }
 
-    Write-Verbose "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
+    Write-Information "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
     try {
         $splatGetUser = @{
             Uri     = "$($actionContext.Configuration.BaseUrl)/api2/persons/$($actionContext.References.Account)"
@@ -81,7 +81,6 @@ try {
         } else {
             throw
         }
-
     }
 
     if ($null -ne $correlatedAccount) {
@@ -90,10 +89,10 @@ try {
         $action = 'NotFound'
     }
 
-    # Process    
+    # Process
     switch ($action) {
         'DisableAccount' {
-            Write-Verbose "Disabling Facilitor account with accountReference: [$($actionContext.References.Account)]"
+            Write-Information "Disabling Facilitor account with accountReference: [$($actionContext.References.Account)]"
 
             $nowUtc = [DateTime]::UtcNow
             $body = @{
@@ -122,7 +121,7 @@ try {
         }
 
         'NotFound' {
-            write-verbose "Facilitor account: [$($actionContext.References.Account)] for person: [$($personContext.Person.DisplayName)] could not be found, possibly indicating that it could be deleted, or the account is not correlated"
+            Write-Information "Facilitor account: [$($actionContext.References.Account)] for person: [$($personContext.Person.DisplayName)] could not be found, possibly indicating that it could be deleted, or the account is not correlated"
 
             $outputContext.Success = $true
             $outputContext.AuditLogs.Add([PSCustomObject]@{
@@ -132,21 +131,20 @@ try {
             break
         }
     }
-    
+
 } catch {
-    $outputContext.success = $false
+    $outputContext.Success = $false
     $ex = $PSItem
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
         $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
         $errorObj = Resolve-FacilitorError -ErrorObject $ex
         $auditMessage = "Could not disable Facilitor account. Error: $($errorObj.FriendlyMessage)"
-        Write-Verbose "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
+        Write-Information "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
     } else {
         $auditMessage = "Could not disable Facilitor account. Error: $($ex.Exception.Message)"
-        Write-Verbose "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
+        Write-Information "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
     }
     $outputContext.AuditLogs.Add([PSCustomObject]@{
-            Action  = $action
             Message = $auditMessage
             IsError = $true
         })
