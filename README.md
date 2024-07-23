@@ -10,21 +10,21 @@
 ## Table of contents
 
 - [HelloID-Conn-Prov-Target-Facilitor](#helloid-conn-prov-target-facilitor)
-  - [Table of contents](#table-of-contents)
-  - [Introduction](#introduction)
-  - [Getting started](#getting-started)
-    - [Functional description](#functional-description)
-    - [Connection settings](#connection-settings)
-    - [Field mapping](#field-mapping)
-      - [Correlation configuration](#correlation-configuration)
-    - [Remarks](#remarks)
-      - [Custom field](#custom-field)
-      - [Cost centre, department and location](#cost-centre-department-and-location)
-      - [Functions](#functions)
-      - [Enable / Disable](#enable--disable)
-      - [Updating using a _HTTP.PUT_](#updating-using-a-httpput)
-  - [Getting help](#getting-help)
-  - [HelloID docs](#helloid-docs)
+  - [Table of contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Getting started](#getting-started)
+    - [Functional description](#functional-description)
+    - [Connection settings](#connection-settings)
+    - [Field mapping](#field-mapping)
+      - [Correlation configuration](#correlation-configuration)
+    - [Remarks](#remarks)
+      - [Custom field](#custom-field)
+      - [Cost centre, department and location](#cost-centre-department-and-location)
+      - [Functions](#functions)
+      - [Enable / Disable](#enable--disable)
+      - [Updating using a _HTTP.PUT_](#updating-using-a-httpput)
+  - [Getting help](#getting-help)
+  - [HelloID docs](#helloid-docs)
 
 ## Introduction
 
@@ -75,10 +75,6 @@ The following settings are required to connect to the API.
 ### Field mapping
 
 The field mapping can be imported by using the [_fieldMapping.json_](./fieldMapping.json) file.
-
-> [!TIP]
-> Field mapping starting with `mapping.<fieldname>` is used to lookup values, because facilitor requires an `ID` on the `POST` action.
-
 
 #### Correlation configuration
 
