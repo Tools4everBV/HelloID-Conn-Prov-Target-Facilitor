@@ -9,38 +9,6 @@
 $correlatedAccount = $null
 
 #region functions
-# function Get-MappedValueFromMappingFile {
-#     [CmdletBinding()]
-#     param (
-#         [Parameter(Mandatory)]
-#         [string]
-#         $CsvFileLocation,
-
-#         [string]
-#         $ContractPropertyExternalId,
-
-#         [Parameter(Mandatory)]
-#         [string]
-#         $CsvPropertyHeaderName
-
-#     )
-#     process {
-#         try {
-#             $MappingFile = Import-Csv $CsvFileLocation -Delimiter $actionContext.Configuration.Delimiter
-#             $mappedProperty = ($MappingFile | Where-Object { $_.$($CsvPropertyHeaderName) -eq $ContractPropertyExternalId })
-
-#             if ($null -eq $mappedProperty) {
-#                 throw "No $($CsvPropertyHeaderName) found corresponding to $($CsvPropertyHeaderName) ID [$($ContractPropertyExternalId)]"
-#             }
-            
-#             Write-Output $mappedProperty
-#         }
-#         catch {
-#             $PSCmdlet.ThrowTerminatingError($_)
-#         }
-#     }
-# }
-
 function Get-FacilitorResource {
     [CmdletBinding()]
     param (
