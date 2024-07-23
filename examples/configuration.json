@@ -1,0 +1,63 @@
+[
+    {
+        "key": "APIKey",
+        "type": "input",
+        "defaultValue": "",
+        "templateOptions": {
+            "type": "password",
+            "label": "APIKey",
+            "description": "The Facilitor APIKey",
+            "required": true
+        }
+    },
+    {
+        "key": "BaseUrl",
+        "type": "input",
+        "defaultValue": "https://<companyname>.facilitor-test.nl",
+        "templateOptions": {
+            "label": "BaseUrl",
+            "description": "The URL to the API.",
+            "required": true
+        }
+    },
+    {
+        "key": "Delimiter",
+        "type": "input",
+        "defaultValue": ";",
+        "templateOptions": {
+            "label": "Delimiter",
+            "description": "The Delimiter that is used in the CSV's.",
+            "required": true
+        }
+    },
+    {
+        "key": "DepartmentMappingFile",
+        "type": "input",
+        "defaultValue": "",
+        "templateOptions": {
+            "label": "Department Mapping File",
+            "description": "An additional Mapping file to determine the department that should be assigned to the Facilitor account",
+            "required": true
+        }
+    },
+    {
+        "key": "CostCentreMappingFile",
+        "type": "input",
+        "defaultValue": "",
+        "templateOptions": {
+            "label": "CostCentre Mapping File",
+            "description": "An additional Mapping file to determine the costcentre that should be assigned to the Facilitor account",
+            "required": true
+        }
+    },
+    {
+        "key": "LocationMappingFile",
+        "type": "input",
+        "defaultValue": "",
+        "templateOptions": {
+            "label": "location Mapping File",
+            "description": "An additional Mapping file to determine the location that should be assigned to the Facilitor account",
+            "required": true
+        }
+    }
+  ]

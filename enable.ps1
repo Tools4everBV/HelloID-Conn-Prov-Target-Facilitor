@@ -1,7 +1,6 @@
 ############################################
 # HelloID-Conn-Prov-Target-Facilitor-Enable
 # PowerShell V2
-# Version: 1.0.0
 ############################################
 
 # Enable TLS1.2
@@ -24,11 +23,12 @@ function Resolve-FacilitorError {
         }
 
         try {
-            # Collect ErrorDetails
+            #  Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
 
-            } elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
+            }
+            elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
                 if ($null -ne $ErrorObject.Exception.Response) {
                     if ([string]::IsNullOrEmpty($ErrorObject.ErrorDetails.Message)) {
 
@@ -36,7 +36,8 @@ function Resolve-FacilitorError {
                         if ($null -ne $streamReaderResponse) {
                             $httpErrorObj.ErrorDetails = $streamReaderResponse
                         }
-                    } else {
+                    }
+                    else {
                         $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
                     }
                 }
@@ -44,7 +45,8 @@ function Resolve-FacilitorError {
             $errorDetailsObject = ($httpErrorObj.ErrorDetails | ConvertFrom-Json)
             $httpErrorObj.FriendlyMessage = "$($errorDetailsObject.error.message)"
 
-        } catch {
+        }
+        catch {
             $httpErrorObj.FriendlyMessage = $httpErrorObj.ErrorDetails
         }
         Write-Output $httpErrorObj
@@ -58,15 +60,13 @@ try {
         throw 'The account reference could not be found'
     }
 
-    $credentials = "$($actionContext.Configuration.UserName):$($actionContext.Configuration.Password)"
-    $base64Credentials = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($credentials))
     $headers = @{
-        'Content-Type' = 'application/json; charset=utf-8'
-        Accept         = 'application/json; charset=utf-8'
-        Authorization  = "Basic $($base64Credentials)"
+        'Content-Type'        = 'application/json; charset=utf-8'
+        Accept                = 'application/json; charset=utf-8'
+        'X-FACILITOR-API-KEY' = $actionContext.Configuration.APIKey
     }
 
-    Write-Information "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
+    Write-Verbose "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
     try {
         $splatGetUser = @{
             Uri     = "$($actionContext.Configuration.BaseUrl)/api2/persons/$($actionContext.References.Account)"
@@ -74,26 +74,28 @@ try {
             Headers = $headers
         }
         $correlatedAccount = (Invoke-RestMethod @splatGetUser).person
-    } catch {
+    }
+    catch {
         # A '404' is returned if the entity cannot be found
         if ($_.Exception.Response.StatusCode -eq 404) {
             $correlatedAccount = $null
-        } else {
+        }
+        else {
             throw
         }
-
     }
 
     if ($null -ne $correlatedAccount) {
         $action = 'EnableAccount'
-    } else {
+    }
+    else {
         $action = 'NotFound'
     }
 
-    # Process
+    # Process    
     switch ($action) {
         'EnableAccount' {
-            Write-Information "Enabling Facilitor account with accountReference: [$($actionContext.References.Account)]"
+            Write-Verbose "Enabling Facilitor account with accountReference: [$($actionContext.References.Account)]"
 
             $body = @{
                 person = @{
@@ -110,19 +112,23 @@ try {
 
             if (-not($actionContext.DryRun -eq $true)) {
                 $null = Invoke-RestMethod @splatEnableUser
+
+                $outputContext.AuditLogs.Add([PSCustomObject]@{
+                        Message = "Enable account was successful"
+                        IsError = $false
+                    })
+            }
+            else {
+                write-warning "DryRun would enable account: $body"
             }
 
             $outputContext.Success = $true
-            $outputContext.AuditLogs.Add([PSCustomObject]@{
-                    Action  = $action
-                    Message = 'Enable account was successful'
-                    IsError = $false
-                })
+
             break
         }
 
         'NotFound' {
-            Write-Information "Facilitor account: [$($actionContext.References.Account)] for person: [$($personContext.Person.DisplayName)] could not be found, possibly indicating that it could be deleted, or the account is not correlated"
+            write-verbose "Facilitor account: [$($actionContext.References.Account)] for person: [$($personContext.Person.DisplayName)] could not be found, possibly indicating that it could be deleted, or the account is not correlated"
 
             $outputContext.Success = $false
             $outputContext.AuditLogs.Add([PSCustomObject]@{
@@ -132,20 +138,22 @@ try {
             break
         }
     }
-
-} catch {
-    $outputContext.Success = $false
+}
+catch {
+    $outputContext.success = $false
     $ex = $PSItem
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
         $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
         $errorObj = Resolve-FacilitorError -ErrorObject $ex
         $auditMessage = "Could not enable Facilitor account. Error: $($errorObj.FriendlyMessage)"
-        Write-Information "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
-    } else {
+        Write-Verbose "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
+    }
+    else {
         $auditMessage = "Could not enable Facilitor account. Error: $($ex.Exception.Message)"
-        Write-Information "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
+        Write-Verbose "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
     }
     $outputContext.AuditLogs.Add([PSCustomObject]@{
+            Action  = $action
             Message = $auditMessage
             IsError = $true
         })

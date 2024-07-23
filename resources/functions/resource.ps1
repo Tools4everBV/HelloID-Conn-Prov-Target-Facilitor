@@ -23,11 +23,12 @@ function Resolve-FacilitorError {
         }
 
         try {
-            # Collect ErrorDetails
+            #  Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
 
-            } elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
+            }
+            elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
                 if ($null -ne $ErrorObject.Exception.Response) {
                     if ([string]::IsNullOrEmpty($ErrorObject.ErrorDetails.Message)) {
 
@@ -35,7 +36,8 @@ function Resolve-FacilitorError {
                         if ($null -ne $streamReaderResponse) {
                             $httpErrorObj.ErrorDetails = $streamReaderResponse
                         }
-                    } else {
+                    }
+                    else {
                         $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
                     }
                 }
@@ -43,7 +45,8 @@ function Resolve-FacilitorError {
             $errorDetailsObject = ($httpErrorObj.ErrorDetails | ConvertFrom-Json)
             $httpErrorObj.FriendlyMessage = "$($errorDetailsObject.error.message)"
 
-        } catch {
+        }
+        catch {
             $httpErrorObj.FriendlyMessage = $httpErrorObj.ErrorDetails
         }
         Write-Output $httpErrorObj
@@ -55,38 +58,36 @@ function Get-FacilitorEmployeeFunctions {
         [Parameter()]
         [string]
         $BaseUrl,
-
+ 
         [Parameter()]
         [object]
         $Headers,
-
+ 
         [Parameter()]
         [int]
         $Limit = 100
     )
-
+ 
     Write-Information 'Retrieving all employeeFunctions from Facilitor'
-
+ 
     $splatRetrieveEmployeeFunctionsParams = @{
         Method      = 'GET'
         Headers     = $headers
         ContentType = 'application/json'
     }
-
+ 
     $offset = 0
-    $totalCount = $null
     $allEmployeeFunctions = @()
-
+ 
     do {
         $splatRetrieveEmployeeFunctionsParams['Uri'] = "$BaseUrl/api2/employeefunctions?limit=$Limit&offset=$offset"
         $response = Invoke-RestMethod @splatRetrieveEmployeeFunctionsParams
-
+ 
         $allEmployeeFunctions += $response.employeefunctions
         $offset += $Limit
-        if ($null -eq $totalCount) {
-            $totalCount = $response.total_count
-        }
-    } while ($offset -lt $totalCount)
+    } while ($response.employeefunctions.Count -eq $Limit)
+ 
+    Write-Information "Retrieved [$($allEmployeeFunctions.count)] functions"
 
     $allEmployeeFunctions
 }
@@ -94,15 +95,13 @@ function Get-FacilitorEmployeeFunctions {
 
 try {
     Write-Information 'Setting authorization header'
-    $credentials = "$($actionContext.Configuration.UserName):$($actionContext.Configuration.Password)"
-    $base64Credentials = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($credentials))
+    
     $headers = @{
-        'Content-Type' = 'application/json; charset=utf-8'
-        Accept         = 'application/json; charset=utf-8'
-        Authorization  = "Basic $($base64Credentials)"
+        'Content-Type'        = 'application/json; charset=utf-8'
+        Accept                = 'application/json; charset=utf-8'
+        'X-FACILITOR-API-KEY' = $actionContext.Configuration.APIKey
     }
 
-    Write-Information 'Retrieving all employeeFunctions from Facilitor'
     $allEmployeeFunctions = Get-FacilitorEmployeeFunctions -BaseUrl $actionContext.Configuration.BaseUrl -Headers $headers
 
     Write-Information 'Checking how many employeeFunctions will be created'
@@ -110,7 +109,14 @@ try {
     foreach ($resource in $resourceContext.SourceData) {
         $exists = $allEmployeeFunctions | Where-Object { $_.name -eq $resource }
         if (-not $exists) {
-            $employeeFunctionsToCreate.Add($resource)
+            if (-not ([string]::IsNullOrEmpty($resource))) {
+                $employeeFunctionsToCreate.Add($resource)
+            }
+        }
+        else {
+            if ($actionContext.DryRun -eq $True) {
+                Write-Information "[DryRun] Found [$($resource)] Facilitor resource $($exists | Convertto-json)"
+            }
         }
     }
 
@@ -129,25 +135,28 @@ try {
                     Method      = 'POST'
                     Headers     = $headers
                     ContentType = 'application/json'
-                    Body        = [System.Text.Encoding]::UTF8.GetBytes($employeeFunctionObject)
+                    Body        = $employeeFunctionObject
                 }
-                $null = Invoke-RestMethod @splatCreateResourceParams -Verbose:$false
+                $null = Invoke-RestMethod @splatCreateResourceParams -verbose:$false
                 $outputContext.AuditLogs.Add([PSCustomObject]@{
                         Message = "Created resource: [$($resource)]"
                         IsError = $false
                     })
-            } else {
+            }
+            else {
                 Write-Information "[DryRun] Create [$($resource)] Facilitor resource, will be executed during enforcement+"
             }
-        } catch {
+        }
+        catch {
             $outputContext.Success = $false
             $ex = $PSItem
             if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
                 $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
                 $errorObj = Resolve-FacilitorError -ErrorObject $ex
-                $auditMessage = "Could not create Facilitor resource. Error: $($errorObj.FriendlyMessage)"
+                $auditMessage = "Could not create Facilitor resource [$($resource)]. Error: $($errorObj.FriendlyMessage)"
                 Write-Warning "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
-            } else {
+            }
+            else {
                 $auditMessage = "Could not create Facilitor resource. Error: $($ex.Exception.Message)"
                 Write-Warning "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
             }
@@ -157,7 +166,9 @@ try {
                 })
         }
     }
-} catch {
+    $outputContext.Success = $true
+}
+catch {
     $outputContext.Success = $false
     $ex = $PSItem
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
@@ -165,7 +176,8 @@ try {
         $errorObj = Resolve-FacilitorError -ErrorObject $ex
         $auditMessage = "Could not create Facilitor resource. Error: $($errorObj.FriendlyMessage)"
         Write-Warning "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
-    } else {
+    }
+    else {
         $auditMessage = "Could not create Facilitor resource. Error: $($ex.Exception.Message)"
         Write-Warning "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
     }

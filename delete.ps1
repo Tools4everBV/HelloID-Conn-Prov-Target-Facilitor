@@ -1,5 +1,5 @@
 ############################################
-# HelloID-Conn-Prov-Target-Facilitor-Disable
+# HelloID-Conn-Prov-Target-Facilitor-Delete
 # PowerShell V2
 ############################################
 
@@ -138,7 +138,7 @@ try {
                 })
             break
         }
-    }
+    }   
 }
 catch {
     $outputContext.success = $false
