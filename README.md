@@ -41,19 +41,19 @@ _HelloID-Conn-Prov-Target-Facilitor_ is a target connector. _Facilitor_ provides
 
 The following lifecycle events are available:
 
-| Event                              | Description                                                     |
-| ---------------------------------- | --------------------------------------------------------------- |
-| create.ps1                         | Create and/or correlate the Account                             |
-| update.ps1                         | Update the Account                                              |
-| enable.ps1                         | Enable the Account                                              |
-| disable.ps1                        | Disable the Account                                             |
-| delete.ps1                         | Only disables the account. Deleting an account is not supported |
-| permissions/groups/permissions.ps1 | Retrieve the permissions                                        |
-| permissions/groups/grant.ps1       | Grant permission                                                |
-| permissions/groups/revoke.ps1      | Revoke permission                                               |
-| resources/functions/resource.ps1   | create function resources                                       |
-| configuration.json                 | Default _configuration.json_                                    |
-| fieldMapping.json                  | Default _fieldMapping.json_                                     |
+| Event                                   | Description                                                     |
+| --------------------------------------- | --------------------------------------------------------------- |
+| create.ps1                              | Create and/or correlate the Account                             |
+| update.ps1                              | Update the Account                                              |
+| enable.ps1                              | Enable the Account                                              |
+| disable.ps1                             | Disable the Account                                             |
+| delete.ps1                              | Only disables the account. Deleting an account is not supported |
+| permissions/groups/permissions.ps1      | Retrieve the permissions                                        |
+| permissions/groups/grantPermission.ps1  | Grant permission                                                |
+| permissions/groups/revokePermission.ps1 | Revoke permission                                               |
+| resources/functions/resource.ps1        | create function resources                                       |
+| configuration.json                      | Default _configuration.json_                                    |
+| fieldMapping.json                       | Default _fieldMapping.json_                                     |
 
 ## Getting started
 
