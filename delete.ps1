@@ -1,5 +1,5 @@
 ############################################
-# HelloID-Conn-Prov-Target-Facilitor-Enable
+# HelloID-Conn-Prov-Target-Facilitor-Delete
 # PowerShell V2
 ############################################
 
@@ -86,7 +86,7 @@ try {
     }
 
     if ($null -ne $correlatedAccount) {
-        $action = 'EnableAccount'
+        $action = 'DisableAccount'
     }
     else {
         $action = 'NotFound'
@@ -94,16 +94,17 @@ try {
 
     # Process    
     switch ($action) {
-        'EnableAccount' {
-            Write-Information "Enabling Facilitor account with accountReference: [$($actionContext.References.Account)]"
+        'DisableAccount' {
+            Write-Information "Disabling Facilitor account with accountReference: [$($actionContext.References.Account)]"
 
+            $nowUtc = [DateTime]::UtcNow
             $body = @{
                 person = @{
-                    deactivated = ""
+                    deactivated = $nowUtc.ToString("yyyy-MM-ddTHH:mm:ssZ")
                 }
             } | ConvertTo-Json
 
-            $splatEnableUser = @{
+            $splatDisableUser = @{
                 Uri     = "$($actionContext.Configuration.BaseUrl)/api2/persons/$($actionContext.References.Account)"
                 Method  = 'PUT'
                 Headers = $headers
@@ -111,15 +112,15 @@ try {
             }
 
             if (-not($actionContext.DryRun -eq $true)) {
-                $null = Invoke-RestMethod @splatEnableUser
+                $null = Invoke-RestMethod @splatDisableUser
 
                 $outputContext.AuditLogs.Add([PSCustomObject]@{
-                        Message = "Enable account was successful"
+                        Message = "Disable account with accountReference: [$($actionContext.References.Account)] was successful"
                         IsError = $false
                     })
             }
             else {
-                write-warning "DryRun would enable account: $body"
+                write-warning "DryRun would disable account: $body"
             }
 
             $outputContext.Success = $true
@@ -130,14 +131,14 @@ try {
         'NotFound' {
             Write-Information "Facilitor account: [$($actionContext.References.Account)] for person: [$($personContext.Person.DisplayName)] could not be found, possibly indicating that it could be deleted, or the account is not correlated"
 
-            $outputContext.Success = $false
+            $outputContext.Success = $true
             $outputContext.AuditLogs.Add([PSCustomObject]@{
-                    Message = "Facilitor account with accountReference [$($actionContext.References.Account)] could not be found, indicating that it may have been deleted. "
-                    IsError = $true
+                    Message = "Facilitor account with accountReference: [$($actionContext.References.Account)] could not be found, indicating that it may have been deleted. Skipping action"
+                    IsError = $false
                 })
             break
         }
-    }
+    }   
 }
 catch {
     $outputContext.success = $false
@@ -145,11 +146,11 @@ catch {
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
         $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
         $errorObj = Resolve-FacilitorError -ErrorObject $ex
-        $auditMessage = "Could not enable Facilitor account. Error: $($errorObj.FriendlyMessage)"
+        $auditMessage = "Could not disable Facilitor account. Error: $($errorObj.FriendlyMessage)"
         Write-Information "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
     }
     else {
-        $auditMessage = "Could not enable Facilitor account. Error: $($ex.Exception.Message)"
+        $auditMessage = "Could not disable Facilitor account. Error: $($ex.Exception.Message)"
         Write-Information "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
     }
     $outputContext.AuditLogs.Add([PSCustomObject]@{

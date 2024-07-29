@@ -1,11 +1,10 @@
 # HelloID-Conn-Prov-Target-Facilitor
 
-| :information_source: Information                                                                                                                                                                                                                                                                                                                                                       |
-| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| This repository contains the connector and configuration code only. The implementer is responsible to acquire the connection details such as username, password, certificate, etc. You might even need to sign a contract or agreement with the supplier before implementing this connector. Please contact the client's application manager to coordinate the connector requirements. |
+> [!IMPORTANT]
+> This repository contains the connector and configuration code only. The implementer is responsible to acquire the connection details such as username, password, certificate, etc. You might even need to sign a contract or agreement with the supplier before implementing this connector. Please contact the client's application manager to coordinate the connector requirements.
 
 <p align="center">
-  <img src="https://facilitor.nl/wp-content/uploads/2019/12/Facilitor_logo_CMYK_FMS_blauw_oranje-382x95.jpg">
+  <img src="https://github.com/Tools4everBV/HelloID-Conn-Prov-Target-Facilitor/blob/main/Logo.png?raw=true">
 </p>
 
 ## Table of contents
@@ -14,16 +13,14 @@
   - [Table of contents](#table-of-contents)
   - [Introduction](#introduction)
   - [Getting started](#getting-started)
-    - [Provisioning PowerShell V2 connector](#provisioning-powershell-v2-connector)
-      - [Field mapping](#field-mapping)
-        - [Complex mapping](#complex-mapping)
-          - [FamilyName](#familyname)
-          - [Mail](#mail)
-      - [Correlation configuration](#correlation-configuration)
+    - [Functional description](#functional-description)
     - [Connection settings](#connection-settings)
+    - [Field mapping](#field-mapping)
+      - [Correlation configuration](#correlation-configuration)
     - [Remarks](#remarks)
-      - [`Department` \& `CostCentre` validation](#department--costcentre-validation)
-      - [`locationcode`](#locationcode)
+      - [Custom field](#custom-field)
+      - [Cost centre, department and location](#cost-centre-department-and-location)
+      - [Functions](#functions)
       - [Enable / Disable](#enable--disable)
       - [Updating using a _HTTP.PUT_](#updating-using-a-httpput)
   - [Getting help](#getting-help)
@@ -31,39 +28,53 @@
 
 ## Introduction
 
-_HelloID-Conn-Prov-Target-Facilitor_ is a target connector. _Facilitor_ provides a set of REST API's that allow you to programmatically interact with its data. The HelloID connector uses the API endpoints listed in the table below.
+_HelloID-Conn-Prov-Target-Facilitor_ is a target connector. _Facilitor_ provides a set of REST APIs that allow you to programmatically interact with its data. The HelloID connector uses the API endpoints listed in the table below.
 
-| Endpoint             | Description |
-| -------------------- | ----------- |
-| /persons             |             |
-| /authorizationgroups |             |
-| /costcentres         |             |
-| /departments         |             |
-| /locations           |             |
+| Endpoint             | Description                                                                |
+| -------------------- | -------------------------------------------------------------------------- |
+| /persons             | `GET / POST` actions to read and write the user in Facilitor               |
+| /authorizationgroups | `GET` actions to read authorization groups from Facilitor                  |
+| /costcentres         | `GET` actions to read cost centers from Facilitor                          |
+| /departments         | `GET` actions to read departments from Facilitor                           |
+| /locations           | `GET` actions to read locations from Facilitor                             |
+| /employeefunctions   | `GET / POST` actions to read and write the employee functions in Facilitor |
 
 The following lifecycle events are available:
 
-| Event           | Description                         |
-| --------------- | ----------------------------------- |
-| create.ps1      | Create and/or correlate the Account |
-| update.ps1      | Update the Account                  |
-| enable.ps1      | Enable the Account                  |
-| disable.ps1     | Disable the Account                 |
-| delete.ps1      | Not supported                       |
-| permissions.ps1 | Retrieve the permissions            |
-| grant.ps1       | Grant permission                    |
-| revoke.ps1      | Revoke permission                   |
-| resource.ps1    | create resources                    |
+| Event                                   | Description                                                     |
+| --------------------------------------- | --------------------------------------------------------------- |
+| create.ps1                              | Create and/or correlate the Account                             |
+| update.ps1                              | Update the Account                                              |
+| enable.ps1                              | Enable the Account                                              |
+| disable.ps1                             | Disable the Account                                             |
+| delete.ps1                              | Only disables the account. Deleting an account is not supported |
+| permissions/groups/permissions.ps1      | Retrieve the permissions                                        |
+| permissions/groups/grantPermission.ps1  | Grant permission                                                |
+| permissions/groups/revokePermission.ps1 | Revoke permission                                               |
+| resources/functions/resource.ps1        | create function resources                                       |
+| configuration.json                      | Default _configuration.json_                                    |
+| fieldMapping.json                       | Default _fieldMapping.json_                                     |
 
 ## Getting started
 
-### Provisioning PowerShell V2 connector
+### Functional description
 
-This is _Provisioning PowerShell V2_ connector. Meaning that the configuration is a little different contrary to a _Provisioning PowerShell V1_ connector. For more information on how to configure a HelloID PowerShell V2 connector, please refer to our [documentation](https://docs.helloid.com/en/provisioning/target-systems/powershell-v2-target-systems.html) pages.
+The purpose of this connector is to _manage user account provisioning_ within Facilitor.
 
-#### Field mapping
+In addition, the connector manages permissions
 
-The _mapping_ plays a fundamental role in every connector and is essential for aligning the data fields between a HelloID person and the target system. The _Provisioning PowerShell V2_ connector comes with a UI-based field mapping and is therefore, more accessible to a broader audience, including people who may not have a programming background. The mapping can be imported in HelloID using the fieldMapping.json file
+### Connection settings
+
+The following settings are required to connect to the API.
+
+| Setting | Description                        | Mandatory |
+| ------- | ---------------------------------- | --------- |
+| APIKey  | The _APIKey_ to connect to the API | Yes       |
+| BaseUrl | The URL to the API                 | Yes       |
+
+### Field mapping
+
+The field mapping can be imported by using the [_fieldMapping.json_](./fieldMapping.json) file.
 
 #### Correlation configuration
 
@@ -75,45 +86,57 @@ To properly set up the correlation:
 
 2. Specify the following configuration:
 
-   | Setting                   | Value               |
-   | ------------------------- | ------------------- |
-   | Enable correlation        | `True`              |
-   | Person correlation field  | `Person.ExternalId` |
-   | Account correlation field | `employeeNumber`    |
+ | Setting                   | Value               |
+ | ------------------------- | ------------------- |
+ | Enable correlation        | `True`              |
+ | Person correlation field  | `Person.ExternalId` |
+ | Account correlation field | `employeeNumber`    |
 
-### Connection settings
-
-The following settings are required to connect to the API.
-
-| Setting  | Description                          | Mandatory |
-| -------- | ------------------------------------ | --------- |
-| UserName | The _UserName_ to connect to the API | Yes       |
-| Password | The _Password_ to connect to the API | Yes       |
-| BaseUrl  | The URL to the API                   | Yes       |
+> [!TIP]
+> _For more information on correlation, please refer to our correlation [documentation](https://docs.helloid.com/en/provisioning/target-systems/powershell-v2-target-systems/correlation.html) pages_.
 
 ### Remarks
 
-The connector uses a custom field for populating the location field, the custom field used for this is identified by the ID 1080 and labeled 'Locatie ID. This is because the existing location field for the person corresponds to the preferred location of that person, not the location where the person actually works.
+#### Custom field
 
-#### Mapping
+The connector uses a custom field for populating the location field, the custom field used for this is identified by the ID `1060` and labeled `Locatie ID`. This is because the existing location field for the person corresponds to the preferred location of that person, not the location where the person works. Facilitor uses a daily running script that reads the custom field to fill the location where the person works.
 
-The field mapping contains a mapping object where the cost centre, department, location, and function are populated with either the ID or the name of the corresponding object in the primary contract. This mapping object is used in the create and update lifecycle for validation.
+> [!IMPORTANT]
+> `custom_fields` are mapped in the powershell `create.ps1` and `update.ps1` script. Make sure you get the right `propertyid` from Facilitor. In the current script `1060` is used.
 
-The validation process works as follows: the value from the mapping object is looked up in the .csv file and retrieves the corresponding ID of the object in Facilitor. After that, the ID is used in a GET request to verify if the object exists in Facilitor. If that is the case, it gets added to the create body. If something goes wrong during validation, the connector will return a validation error.
+#### Cost centre, department and location
 
-This works a little bit differently for the function. The resource script creates all the values needed for the function field, so no validation is needed because all the possible functions already exist in Facilitor.
+The field mapping contains a mapping object where the cost centre, department and location are populated with either the ID or the name of the corresponding object in the primary contract. This mapping object is used in the create and update lifecycle for validation.
 
-The connector utilizes three separate mapping files. Examples of these mapping files can be found in the Assets folder. The column names in these mapping files are hardcoded and used in the connector. If you want to change these, make sure to also edit the connector accordingly.
+The validation process works as follows: the value from the mapping object is looked up in Faciltor and retrieves the corresponding ID of the object in Facilitor. By default on `name` or `visitzipcode`. If something goes wrong during validation, the connector will return a validation error. You can edit the `SearchProperty` in the  `create.ps1` and `update.ps1` script. Example:
+
+```Powershell
+$splatGetDepartments = @{
+    Url = "$($actionContext.Configuration.BaseUrl)/api2/departments?name=$($actionContext.Data.mapping.departmentId)"
+    Property = 'departments'
+    PropertyId = $actionContext.Data.mapping.departmentId
+    SearchProperty = 'name'
+}
+```
+
+> [!TIP]
+> Optionally you can use a .csv file and retrieve the corresponding IDs. Please check out the [_examples folder_](./examples) to get you started
+
+#### Functions
+The resource script creates all the values needed for the function field. The functions are mapped by name but must exist in Facilitor.
 
 #### Enable / Disable
 
-Both the _enable_ and _disable_ lifecycle actions, will set the `deactivated` property. The value of this property is a `[DateTime]` string in format: `yyyy-MM-ddTHH:mm:ssZ`.
+Both the _enable_ and _disable_ lifecycle actions, will set the `deactivated` property. The value of this property is a `[DateTime]` string in the format: `yyyy-MM-ddTHH:mm:ssZ`.
 
 - ℹ️ Within the _disable_ lifecycle action, the value will be set to the current date.
 
+> [!IMPORTANT]
+> The `enable.ps1` and `disable.ps1` are only needed if Facilitor doesn't delete the person when `deactivated` is filled. If used please also test if `deactivated` is overridden when updating the account. This could still be a problem in Facilitor.
+
 #### Updating using a _HTTP.PUT_
 
-Updating the account is based on a _HTTP.PUT_. A partial _PUT_ is supported within _Facilitor_. Meaning; only the properties that have changed will be updated.
+Updating the account is based on a _HTTP.PUT_. A partial _PUT_ is supported within _Facilitor_. Meaning; that only the properties that have changed will be updated.
 
 ## Getting help
 

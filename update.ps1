@@ -1,7 +1,6 @@
 #################################################
 # HelloID-Conn-Prov-Target-Facilitor-Update
 # PowerShell V2
-# Version: 1.0.0
 #################################################
 
 # Enable TLS1.2
@@ -10,38 +9,6 @@
 $correlatedAccount = $null
 
 #region functions
-function Get-MappedValueFromMappingFile {
-    [CmdletBinding()]
-    param (
-        [Parameter(Mandatory)]
-        [string]
-        $CsvFileLocation,
-
-        [Parameter(Mandatory)]
-        [string]
-        $ContractPropertyExternalId,
-
-        [Parameter(Mandatory)]
-        [string]
-        $CsvPropertyHeaderName
-
-    )
-    process {
-        try {
-            $MappingFile = Import-Csv $CsvFileLocation
-            $mappedProperty = ($MappingFile | Where-Object { $_.$($CsvPropertyHeaderName) -eq $ContractPropertyExternalId })
-
-            if ($null -eq $mappedProperty) {
-                throw "No $($CsvPropertyHeaderName) found corresponding to $($CsvPropertyHeaderName) ID [$($ContractPropertyExternalId)]"
-            }
-
-            Write-Output $mappedProperty
-        } catch {
-            $PSCmdlet.ThrowTerminatingError($_)
-        }
-    }
-}
-
 function Get-FacilitorResource {
     [CmdletBinding()]
     param (
@@ -53,10 +20,17 @@ function Get-FacilitorResource {
         [string]
         $Property,
 
+        [string]
+        $PropertyId,
+
         [Parameter(Mandatory)]
         [string]
-        $PropertyId
+        $SearchProperty,
+
+        [string]
+        $SearchValue
     )
+
     process {
         try {
             $splatGetProperty = @{
@@ -66,17 +40,48 @@ function Get-FacilitorResource {
             }
 
             $resultProperty = ([array](Invoke-RestMethod @splatGetProperty)).$($property)
+
             if ($resultProperty.count -eq 0) {
-                throw "No $($Property) found in target system corresponding to $($Property) ID [$($PropertyId)]"
-            } elseif ($resultProperty.count -gt 1) {
-                throw "More than 1 $($Property) found in target system corresponding to $($Property) ID [$($PropertyId)]"
+                throw "No $($Property) found in target system corresponding to $($Property) $SearchProperty [$($PropertyId)]"     
+            }
+            elseif ($resultProperty.count -gt 1) {
+                throw "More than 1 $($Property) found in target system corresponding to $($Property) $SearchProperty [$($PropertyId)]"
             }
 
-            Write-Output $resultProperty
-        } catch {
+            Write-Output $resultProperty 
+        }
+        catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
     }
+}
+
+function ConvertTo-FacilitorFlatObject {
+    param (
+        [Parameter(Mandatory = $true)]
+        [pscustomobject] $Object,
+        [string] $Prefix = ""
+    )
+ 
+    $result = [ordered]@{}
+ 
+    foreach ($property in $Object.PSObject.Properties) {
+        $name = if ($Prefix) { "$Prefix`_$($property.Name)" } else { $property.Name }
+ 
+        if ($null -ne $property.Value) {
+            if ($property.Value -is [pscustomobject]) {
+                $flattenedSubObject = ConvertTo-FacilitorFlatObject -Object $property.Value -Prefix $name
+                foreach ($subProperty in $flattenedSubObject.PSObject.Properties) {
+                    $result[$subProperty.Name] = [string]$subProperty.Value
+                }
+            }
+            else {
+                $result[$name] = [string]$property.Value
+            }
+        }
+    }
+ 
+    [PSCustomObject]$result
 }
 
 function Resolve-FacilitorError {
@@ -95,18 +100,21 @@ function Resolve-FacilitorError {
         }
 
         try {
-            # Collect ErrorDetails
+            #  Collect ErrorDetails
             if ($ErrorObject.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') {
                 $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
 
-            } elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
+            }
+            elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
                 if ($null -ne $ErrorObject.Exception.Response) {
                     if ([string]::IsNullOrEmpty($ErrorObject.ErrorDetails.Message)) {
+                        
                         $streamReaderResponse = [System.IO.StreamReader]::new($ErrorObject.Exception.Response.GetResponseStream()).ReadToEnd()
                         if ($null -ne $streamReaderResponse) {
                             $httpErrorObj.ErrorDetails = $streamReaderResponse
                         }
-                    } else {
+                    }
+                    else {
                         $httpErrorObj.ErrorDetails = $ErrorObject.ErrorDetails.Message
                     }
                 }
@@ -114,7 +122,8 @@ function Resolve-FacilitorError {
             $errorDetailsObject = ($httpErrorObj.ErrorDetails | ConvertFrom-Json)
             $httpErrorObj.FriendlyMessage = "$($errorDetailsObject.error.message)"
 
-        } catch {
+        }
+        catch {
             $httpErrorObj.FriendlyMessage = $httpErrorObj.ErrorDetails
         }
         Write-Output $httpErrorObj
@@ -137,8 +146,9 @@ function Add-AuditLog {
             $outputContext.AuditLogs.Add([PSCustomObject]@{
                     Message = $ErrorMessage
                     IsError = $IsError
-                })
-        } catch {
+                })           
+        }
+        catch {
             $PSCmdlet.ThrowTerminatingError($_)
         }
     }
@@ -152,12 +162,10 @@ try {
     }
     $outputContext.AccountReference = $actionContext.References.Account
 
-    $credentials = "$($actionContext.Configuration.UserName):$($actionContext.Configuration.Password)"
-    $base64Credentials = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($credentials))
     $headers = @{
-        'Content-Type' = 'application/json; charset=utf-8'
-        Accept         = 'application/json; charset=utf-8'
-        Authorization  = "Basic $($base64Credentials)"
+        'Content-Type'        = 'application/json; charset=utf-8'
+        Accept                = 'application/json; charset=utf-8'
+        'X-FACILITOR-API-KEY' = $actionContext.Configuration.APIKey
     }
 
     Write-Information "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
@@ -169,36 +177,49 @@ try {
             Headers = $headers
         }
         $correlatedAccount = (Invoke-RestMethod @splatGetUser).person
-    } catch {
+    }
+    catch {
         # A '404' is returned if the entity cannot be found
         if ($_.Exception.Response.StatusCode -eq 404) {
             $correlatedAccount = $null
-        } else {
+        }
+        else {
             throw
         }
     }
 
     $isValidationError = $false
 
-    Write-Information 'Lookup Cost Centre via Mapping'
+    Write-Information "Lookup Cost Centre name"
     try {
-        $mappedCostCentre = Get-MappedValueFromMappingFile -CsvFileLocation $actionContext.Configuration.CostCentreMappingFile -ContractPropertyExternalId $actionContext.Data.mapping.costCenterId -CsvPropertyHeaderName "CostCenter"
-        $costcentre = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/costcentres?id=$($mappedCostCentre.FacilitorCostCenterId)" -Property "costcentre" -PropertyId $mappedCostCentre.FacilitorCostCenterId
-
+        $splatGetCostcentres = @{
+            Url            = "$($actionContext.Configuration.BaseUrl)/api2/costcentres?name=$($actionContext.Data.mapping.costCenterId)"
+            Property       = 'costcentres'
+            PropertyId     = $actionContext.Data.mapping.costCenterId
+            SearchProperty = 'name'
+        }
+        $costcentre = Get-FacilitorResource @splatGetCostcentres
+        
         $actionContext.Data | Add-Member @{
             costcentre = [PSCustomObject]@{
                 id = $costcentre.id
             }
         } -Force
-    } catch {
+    }
+    catch {
         $isValidationError = $true
-        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true
+        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true           
     }
 
-    Write-Information 'Lookup Department via Mapping'
+    Write-Information "Lookup Department via Mapping"
     try {
-        $mappedDepartment = Get-MappedValueFromMappingFile -CsvFileLocation $actionContext.Configuration.DepartmentMappingFile -ContractPropertyExternalId $actionContext.Data.mapping.departmentId -CsvPropertyHeaderName "Department"
-        $department = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/departments?id=$($mappedDepartment.FacilitorDepartmentId)" -Property "department" -PropertyId $mappedDepartment.FacilitorDepartmentId
+        $splatGetDepartments = @{
+            Url            = "$($actionContext.Configuration.BaseUrl)/api2/departments?name=$($actionContext.Data.mapping.departmentId)"
+            Property       = 'departments'
+            PropertyId     = $actionContext.Data.mapping.departmentId
+            SearchProperty = 'name'
+        }
+        $department = Get-FacilitorResource @splatGetDepartments
 
         $actionContext.Data | Add-Member @{
             department = [PSCustomObject]@{
@@ -206,28 +227,39 @@ try {
             }
         } -Force
 
-    } catch {
+    }
+    catch {
         $isValidationError = $true
-        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true
+        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
     }
 
-    Write-Information 'Lookup Location via Mapping'
+    Write-Information "Lookup Location via Mapping"
     try {
-        $mappedLocation = Get-MappedValueFromMappingFile -CsvFileLocation $actionContext.Configuration.LocationMappingFile -ContractPropertyExternalId $actionContext.Data.mapping.locationId -CsvPropertyHeaderName "Location"
-        $location = Get-FacilitorResource -Url "$($actionContext.Configuration.BaseUrl)/api2/locations?id=$($mappedLocation.FacilitorlocationId)" -Property "location" -PropertyId $mappedLocation.FacilitorLocationId
-
+        if (-not ([string]::IsNullOrEmpty($actionContext.Data.mapping.locationId))) {
+            $splatGetLocations = @{
+                Url            = "$($actionContext.Configuration.BaseUrl)/api2/locations?visitzipcode=$($actionContext.Data.mapping.locationId)"
+                Property       = 'locations'
+                PropertyId     = $actionContext.Data.mapping.locationId
+                SearchProperty = 'visitzipcode'
+            }
+            $location = Get-FacilitorResource @splatGetLocations
+        }
+        else {
+            Write-Information "LocationId (vistizip) is empty lookup skiped"
+        }
         $actionContext.Data.custom_fields = @(
             [PSCustomObject]@{
-                propertyid = 1080
+                propertyid = 1060
                 value      = "$($location.id)"
                 Type       = 'N'
                 sequence   = 50
                 label      = 'Locatie ID'
             }
         )
-    } catch {
+    }
+    catch {
         $isValidationError = $true
-        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true
+        Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
     }
 
     if ($isValidationError) {
@@ -244,7 +276,7 @@ try {
     if (($null -ne $correlatedAccount) -and ($isValidationError -eq $false)) {
         $splatCompareProperties = @{
             ReferenceObject  = @($correlatedAccount.PSObject.Properties)
-            DifferenceObject = @(($actionContext.Data | Select-Object * -ExcludeProperty custom_fields, costcentre, department, function, mapping).PSObject.Properties)
+            DifferenceObject = @(($actionContext.Data | Select-Object * -ExcludeProperty id, custom_fields, costcentre, department, function, mapping).PSObject.Properties)
         }
         $propertiesChangedObject = Compare-Object @splatCompareProperties -PassThru | Where-Object { $_.SideIndicator -eq '=>' }
         $propertiesChanged = @{}
@@ -264,25 +296,25 @@ try {
         }
 
         # only select location custom field for compared
-        $correlatedAccount.custom_fields = @($correlatedAccount.custom_fields | Where-Object { $_.propertyid -eq 1080 })
-        if ($correlatedAccount.custom_fields.value -ne $actionContext.data.custom_fields.value) {
+        $correlatedAccount.custom_fields = @($correlatedAccount.custom_fields | Where-Object { $_.propertyid -eq 1060 })
+        if ([string]$correlatedAccount.custom_fields.value -ne $actionContext.data.custom_fields.value) {
             $propertiesChanged['custom_fields'] = $actionContext.Data.custom_fields
         }
 
-        if ($propertiesChanged) {
+        if ($($propertiesChanged.Keys).count -gt 0) {
             $action = 'UpdateAccount'
-        } else {
+        }
+        else {
             $action = 'NoChanges'
         }
-    } elseif ($isValidationError -eq $true) {
-        $action = 'ValidationError'
-    } else {
+    }
+    else {
         $action = 'NotFound'
     }
 
     # Process
     switch ($action) {
-        'UpdateAccount' {
+        'UpdateAccount' {  
             Write-Information "Updating Facilitor account with accountReference: [$($actionContext.References.Account)], Account property(s) required to update: $($propertiesChanged.Keys -join ', ')"
 
             $body = @{
@@ -297,16 +329,20 @@ try {
             }
 
             if (-not($actionContext.DryRun -eq $true)) {
-                $null = Invoke-RestMethod @splatUpdateUser
+                $updatePersonResult = Invoke-RestMethod @splatUpdateUser
+                $outputContext.PreviousData = $correlatedAccount
+                $outputContext.data = $updatePersonResult.person
+
+                $outputContext.AuditLogs.Add([PSCustomObject]@{
+                        Message = "Update account with accountReference: [$($actionContext.References.Account)] was successful, Account property(s) updated: [$($propertiesChanged.Keys -join ",")]"
+                        IsError = $false
+                    })
+            }
+            else {
+                write-warning "DryRun would update account: $body"
             }
 
-            $outputContext.PreviousData = $correlatedAccount
-            $outputContext.data = $actionContext.Data
             $outputContext.Success = $true
-            $outputContext.AuditLogs.Add([PSCustomObject]@{
-                    Message = "Update account with accountReference: [$($actionContext.References.Account)] was successful, Account property(s) updated: [$($propertiesChanged.Keys -join ",")]"
-                    IsError = $false
-                })
         }
 
         'NoChanges' {
@@ -322,12 +358,6 @@ try {
             break
         }
 
-        'ValidationError' {
-            Write-Information 'Validation Error'
-            $outputContext.Success = $false
-            break
-        }
-
         'NotFound' {
             $outputContext.Success = $false
             $outputContext.AuditLogs.Add([PSCustomObject]@{
@@ -338,7 +368,8 @@ try {
         }
     }
 
-} catch {
+}
+catch {
     $outputContext.Success = $false
     $ex = $PSItem
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
@@ -346,12 +377,15 @@ try {
         $errorObj = Resolve-FacilitorError -ErrorObject $ex
         $auditMessage = "Could not update Facilitor account. Error: $($errorObj.FriendlyMessage)"
         Write-Information "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
-    } else {
+    }
+    else {
         $auditMessage = "Could not update Facilitor account. Error: $($ex.Exception.Message)"
         Write-Information "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
     }
-    $outputContext.AuditLogs.Add([PSCustomObject]@{
-            Message = $auditMessage
-            IsError = $true
-        })
+    if (-Not($ex.Exception.Message -eq 'Validation error')) {
+        $outputContext.AuditLogs.Add([PSCustomObject]@{
+                Message = $auditMessage
+                IsError = $true
+            })
+    }
 }
