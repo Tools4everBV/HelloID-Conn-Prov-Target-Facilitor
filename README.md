@@ -18,6 +18,7 @@
     - [Field mapping](#field-mapping)
       - [Correlation configuration](#correlation-configuration)
     - [Remarks](#remarks)
+      - [Concurrent actions](#concurrent-actions)
       - [Custom field](#custom-field)
       - [Cost centre, department and location](#cost-centre-department-and-location)
       - [Functions](#functions)
@@ -96,6 +97,11 @@ To properly set up the correlation:
 > _For more information on correlation, please refer to our correlation [documentation](https://docs.helloid.com/en/provisioning/target-systems/powershell-v2-target-systems/correlation.html) pages_.
 
 ### Remarks
+
+#### Concurrent actions
+
+> [!IMPORTANT]
+> Granting and revoking groups is done by editing Facilitor persons after receiving the groups. For this reason, the concurrent actions need to be set to `1`.
 
 #### Custom field
 
