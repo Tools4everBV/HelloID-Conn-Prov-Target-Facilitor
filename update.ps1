@@ -108,8 +108,7 @@ function Resolve-FacilitorError {
             elseif ($ErrorObject.Exception.GetType().FullName -eq 'System.Net.WebException') {
                 if ($null -ne $ErrorObject.Exception.Response) {
                     if ([string]::IsNullOrEmpty($ErrorObject.ErrorDetails.Message)) {
-                        1
-
+                        
                         $streamReaderResponse = [System.IO.StreamReader]::new($ErrorObject.Exception.Response.GetResponseStream()).ReadToEnd()
                         if ($null -ne $streamReaderResponse) {
                             $httpErrorObj.ErrorDetails = $streamReaderResponse
@@ -252,9 +251,9 @@ try {
             [PSCustomObject]@{
                 propertyid = 1060
                 value      = "$($location.id)"
-                Type       = "N"
+                Type       = 'N'
                 sequence   = 50
-                label      = "Locatie ID"
+                label      = 'Locatie ID'
             }
         )
     }

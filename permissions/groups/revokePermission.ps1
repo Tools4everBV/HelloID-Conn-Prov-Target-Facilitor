@@ -67,7 +67,7 @@ try {
         'X-FACILITOR-API-KEY' = $actionContext.Configuration.APIKey
     }
 
-    write-information  "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
+    Write-Information  "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
     try {
         $splatParams = @{
             Uri     = "$($actionContext.Configuration.BaseUrl)/api2/persons/$($actionContext.References.Account)?include=authorization"
@@ -96,7 +96,7 @@ try {
     # Process
     switch ($action) {
         'RevokePermission' {
-            write-information  "Revoking Facilitor permission: [$($actionContext.References.Permission.Reference)]"
+            Write-Information  "Revoking Facilitor permission: [$($actionContext.References.Permission.Reference)]"
             if ($correlatedAccount.person.authorization.authorizationgroup.id -Contains $actionContext.References.Permission.Reference) {
                 $authorizationBody = [array]($correlatedAccount.person.authorization | Where-Object { $_.authorizationgroup.id -ne $actionContext.References.Permission.Reference })
                 if ($null -eq $authorizationBody) {

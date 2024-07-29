@@ -66,7 +66,7 @@ try {
         'X-FACILITOR-API-KEY' = $actionContext.Configuration.APIKey
     }
 
-    write-information  "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
+    Write-Information  "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
     try {
         $splatParams = @{
             Uri     = "$($actionContext.Configuration.BaseUrl)/api2/persons/$($actionContext.References.Account)?include=authorization"
@@ -93,7 +93,7 @@ try {
     # Process
     switch ($action) {
         'GrantPermission' {
-            write-information  "Granting Facilitor entitlement: [$($actionContext.References.Permission.DisplayName)]"
+            Write-Information  "Granting Facilitor entitlement: [$($actionContext.References.Permission.DisplayName)]"
             if ($correlatedAccount.person.authorization.authorizationgroup.id -NotContains $actionContext.References.Permission.Reference) {
                 $correlatedAccount.person.authorization += [PSCustomObject]@{
                     authorizationgroup = [PSCustomObject]@{

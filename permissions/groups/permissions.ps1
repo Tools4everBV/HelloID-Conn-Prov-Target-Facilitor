@@ -55,7 +55,7 @@ function Invoke-FacilitorRestMethod {
                     ContentType = $ContentType
                 }
                 if ($Body) {
-                    write-information 'Adding body to request'
+                    Write-Information 'Adding body to request'
                     $splatParams['Body'] = $Body
                 }
                 $partialResult = Invoke-RestMethod @splatParams -Verbose:$false
@@ -124,7 +124,7 @@ function Resolve-FacilitorError {
 #endregion
 
 try {
-    write-information 'Adding authorization headers'
+    Write-Information 'Adding authorization headers'
     $splatParams = @{
         Uri     = "$($actionContext.Configuration.BaseUrl)/api2/authorizationgroups"
         Method  = 'GET'
@@ -134,7 +134,7 @@ try {
             'X-FACILITOR-API-KEY' = $actionContext.Configuration.APIKey
         }
     }
-    write-information 'Retrieving permissions'
+    Write-Information 'Retrieving permissions'
     $permissions = Invoke-FacilitorRestMethod @splatParams -Paging 
     foreach ($permission in $permissions) {
         $outputContext.Permissions.Add(
@@ -153,9 +153,9 @@ catch {
     if ($($ex.Exception.GetType().FullName -eq 'Microsoft.PowerShell.Commands.HttpResponseException') -or
         $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
         $errorObj = Resolve-FacilitorError -ErrorObject $ex
-        write-information "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
+        Write-Information "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
     }
     else {
-        write-information "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
+        Write-Information "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
     }
 }

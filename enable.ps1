@@ -66,7 +66,7 @@ try {
         'X-FACILITOR-API-KEY' = $actionContext.Configuration.APIKey
     }
 
-    Write-Verbose "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
+    Write-Information "Verifying if a Facilitor account for [$($personContext.Person.DisplayName)] exists"
     try {
         $splatGetUser = @{
             Uri     = "$($actionContext.Configuration.BaseUrl)/api2/persons/$($actionContext.References.Account)"
@@ -95,7 +95,7 @@ try {
     # Process    
     switch ($action) {
         'EnableAccount' {
-            Write-Verbose "Enabling Facilitor account with accountReference: [$($actionContext.References.Account)]"
+            Write-Information "Enabling Facilitor account with accountReference: [$($actionContext.References.Account)]"
 
             $body = @{
                 person = @{
@@ -128,7 +128,7 @@ try {
         }
 
         'NotFound' {
-            write-verbose "Facilitor account: [$($actionContext.References.Account)] for person: [$($personContext.Person.DisplayName)] could not be found, possibly indicating that it could be deleted, or the account is not correlated"
+            Write-Information "Facilitor account: [$($actionContext.References.Account)] for person: [$($personContext.Person.DisplayName)] could not be found, possibly indicating that it could be deleted, or the account is not correlated"
 
             $outputContext.Success = $false
             $outputContext.AuditLogs.Add([PSCustomObject]@{
@@ -146,11 +146,11 @@ catch {
         $($ex.Exception.GetType().FullName -eq 'System.Net.WebException')) {
         $errorObj = Resolve-FacilitorError -ErrorObject $ex
         $auditMessage = "Could not enable Facilitor account. Error: $($errorObj.FriendlyMessage)"
-        Write-Verbose "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
+        Write-Information "Error at Line '$($errorObj.ScriptLineNumber)': $($errorObj.Line). Error: $($errorObj.ErrorDetails)"
     }
     else {
         $auditMessage = "Could not enable Facilitor account. Error: $($ex.Exception.Message)"
-        Write-Verbose "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
+        Write-Information "Error at Line '$($ex.InvocationInfo.ScriptLineNumber)': $($ex.InvocationInfo.Line). Error: $($ex.Exception.Message)"
     }
     $outputContext.AuditLogs.Add([PSCustomObject]@{
             Action  = $action

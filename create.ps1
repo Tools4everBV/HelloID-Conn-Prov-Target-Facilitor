@@ -221,9 +221,9 @@ try {
                 [PSCustomObject]@{
                     propertyid = 1060
                     value      = "$($location.id)"
-                    Type       = "N"
+                    Type       = 'N'
                     sequence   = 50
-                    label      = "Locatie ID"
+                    label      = 'Locatie ID'
                 }
             )
         }
