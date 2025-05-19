@@ -349,7 +349,7 @@ try {
             Write-Information "No changes to Facilitor account with accountReference: [$($actionContext.References.Account)]"
 
             $outputContext.PreviousData = $correlatedAccount
-            $outputContext.data = $actionContext.Data
+            $outputContext.data = $correlatedAccount
             $outputContext.Success = $true
             $outputContext.AuditLogs.Add([PSCustomObject]@{
                     Message = "Update account with accountReference: [$($actionContext.References.Account)] was succesful. No changes need to be made to the account"
