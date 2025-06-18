@@ -217,15 +217,17 @@ try {
             }
             $location = Get-FacilitorResource @splatGetLocations
 
-            $actionContext.Data.custom_fields = @(
-                [PSCustomObject]@{
-                    propertyid = 1060
-                    value      = "$($location.id)"
-                    Type       = 'N'
-                    sequence   = 50
-                    label      = 'Locatie ID'
-                }
-            )
+            $actionContext.Data | Add-Member @{ 
+                custom_fields = @(
+                    [PSCustomObject]@{
+                        propertyid = 1060
+                        value      = "$($location.id)"
+                        Type       = 'N'
+                        sequence   = 50
+                        label      = 'Locatie ID'
+                    }
+                )
+            } -Force
         }
         catch {
             $isValidationError = $true

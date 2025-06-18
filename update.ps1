@@ -247,15 +247,17 @@ try {
         else {
             Write-Information "LocationId (vistizip) is empty lookup skiped"
         }
-        $actionContext.Data.custom_fields = @(
-            [PSCustomObject]@{
-                propertyid = 1060
-                value      = "$($location.id)"
-                Type       = 'N'
-                sequence   = 50
-                label      = 'Locatie ID'
-            }
-        )
+        $actionContext.Data | Add-Member @{ 
+            custom_fields = @(
+                [PSCustomObject]@{
+                    propertyid = 1060
+                    value      = "$($location.id)"
+                    Type       = 'N'
+                    sequence   = 50
+                    label      = 'Locatie ID'
+                }
+            )
+        } -Force
     }
     catch {
         $isValidationError = $true
@@ -349,7 +351,7 @@ try {
             Write-Information "No changes to Facilitor account with accountReference: [$($actionContext.References.Account)]"
 
             $outputContext.PreviousData = $correlatedAccount
-            $outputContext.data = $actionContext.Data
+            $outputContext.data = $correlatedAccount
             $outputContext.Success = $true
             $outputContext.AuditLogs.Add([PSCustomObject]@{
                     Message = "Update account with accountReference: [$($actionContext.References.Account)] was succesful. No changes need to be made to the account"
