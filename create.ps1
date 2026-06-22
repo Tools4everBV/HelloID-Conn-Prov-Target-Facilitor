@@ -1,7 +1,8 @@
-#################################################
+############################################
 # HelloID-Conn-Prov-Target-Facilitor-Create
-# PowerShell V2
-#################################################
+#
+# Version: 1.2.0
+############################################
 
 # Enable TLS1.2
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor [System.Net.SecurityProtocolType]::Tls12
@@ -172,7 +173,7 @@ try {
             
         try {
             $splatGetCostcentres = @{
-                Url            = "$($actionContext.Configuration.BaseUrl)/api2/costcentres?name=$($actionContext.Data.mapping.costCenterId)"
+                Url            = "$($actionContext.Configuration.BaseUrl)/api2/costcentres?name=$($actionContext.Data.mapping.costCenterId)&name=$($actionContext.Data.mapping.costCenterId)"
                 Property       = 'costcentres'
                 PropertyId     = $actionContext.Data.mapping.costCenterId
                 SearchProperty = 'name'
@@ -191,7 +192,7 @@ try {
 
         try {
             $splatGetDepartments = @{
-                Url            = "$($actionContext.Configuration.BaseUrl)/api2/departments?name=$($actionContext.Data.mapping.departmentId)"
+                Url            = "$($actionContext.Configuration.BaseUrl)/api2/departments?name=$($actionContext.Data.mapping.departmentId)&name=$($actionContext.Data.mapping.departmentId)"
                 Property       = 'departments'
                 PropertyId     = $actionContext.Data.mapping.departmentId
                 SearchProperty = 'name'
@@ -208,31 +209,20 @@ try {
             Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
         }
 
-        try {
-            $splatGetLocations = @{
-                Url            = "$($actionContext.Configuration.BaseUrl)/api2/locations?visitzipcode=$($actionContext.Data.mapping.locationId)"
-                Property       = 'locations'
-                PropertyId     = $actionContext.Data.mapping.locationId
-                SearchProperty = 'visitzipcode'
-            }
-            $location = Get-FacilitorResource @splatGetLocations
-
-            $actionContext.Data | Add-Member @{ 
-                custom_fields = @(
-                    [PSCustomObject]@{
-                        propertyid = 1060
-                        value      = "$($location.id)"
-                        Type       = 'N'
-                        sequence   = 50
-                        label      = 'Locatie ID'
-                    }
-                )
-            } -Force
-        }
-        catch {
-            $isValidationError = $true
-            Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
-        }
+        # try {
+        #     $splatGetLocations = @{
+        #         Url            = "$($actionContext.Configuration.BaseUrl)/api2/locations?name=$($actionContext.Data.mapping.locationId)"
+        #         Property       = 'locations'
+        #         PropertyId     = $actionContext.Data.mapping.locationId
+        #         SearchProperty = 'name'
+        #     }
+        #     $location = Get-FacilitorResource @splatGetLocations
+            
+        # }
+        # catch {
+        #     $isValidationError = $true
+        #     Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
+        # }
 
         if ($isValidationError) {
             throw 'Validation error'
@@ -256,7 +246,7 @@ try {
 
             Write-Information 'Creating and correlating Facilitor account'
             $splatCreateUser = @{
-                Uri     = "$($actionContext.Configuration.BaseUrl)/api2/persons?inlcude=custom_fields"
+                Uri     = "$($actionContext.Configuration.BaseUrl)/api2/persons?include=custom_fields"
                 Headers = $headers
                 Method  = 'POST'
                 Body    = [System.Text.Encoding]::UTF8.GetBytes($createBody)
@@ -264,7 +254,7 @@ try {
 
             if (-not($actionContext.DryRun -eq $true)) {
                 $createPersonResult = Invoke-RestMethod @splatCreateUser
-                $outputContext.AccountReference = $createPersonResult.person.id
+                $outputContext.AccountReference = "$($createPersonResult.person.id)"
                 $outputContext.data = $createPersonResult.person
 
                 $outputContext.AuditLogs.Add([PSCustomObject]@{
@@ -282,7 +272,7 @@ try {
 
         'CorrelateAccount' {
             Write-Information 'Correlating Facilitor account'
-            $outputContext.AccountReference = $correlatedAccount.id
+            $outputContext.AccountReference = "$($correlatedAccount.id)"
             $outputContext.data = $correlatedAccount
             $outputContext.AccountCorrelated = $true
 

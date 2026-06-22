@@ -1,23 +1,23 @@
 [
-    {
-        "key": "APIKey",
-        "type": "input",
-        "defaultValue": "",
-        "templateOptions": {
-            "type": "password",
-            "label": "APIKey",
-            "description": "The Facilitor APIKey",
-            "required": true
-        }
+  {
+    "defaultValue": "",
+    "key": "APIKey",
+    "templateOptions": {
+      "description": "The Facilitor APIKey",
+      "label": "APIKey",
+      "required": true,
+      "type": "password"
     },
-    {
-        "key": "BaseUrl",
-        "type": "input",
-        "defaultValue": "https://<companyname>.facilitor.nl",
-        "templateOptions": {
-            "label": "BaseUrl",
-            "description": "The URL to the API.",
-            "required": true
-        }
-    }
+    "type": "input"
+  },
+  {
+    "defaultValue": "https://<companyname>.facilitor.nl",
+    "key": "BaseUrl",
+    "templateOptions": {
+      "description": "The URL to the API.",
+      "label": "BaseUrl",
+      "required": true
+    },
+    "type": "input"
+  }
 ]

@@ -1,6 +1,7 @@
 ############################################
 # HelloID-Conn-Prov-Target-Facilitor-Enable
-# PowerShell V2
+#
+# Version: 1.2.0
 ############################################
 
 # Enable TLS1.2
