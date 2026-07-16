@@ -173,7 +173,7 @@ try {
             
         try {
             $splatGetCostcentres = @{
-                Url            = "$($actionContext.Configuration.BaseUrl)/api2/costcentres?name=$($actionContext.Data.mapping.costCenterId)&name=$($actionContext.Data.mapping.costCenterId)"
+                Url            = "$($actionContext.Configuration.BaseUrl)/api2/costcentres?name=$($actionContext.Data.mapping.costCenterId)"
                 Property       = 'costcentres'
                 PropertyId     = $actionContext.Data.mapping.costCenterId
                 SearchProperty = 'name'
@@ -192,7 +192,7 @@ try {
 
         try {
             $splatGetDepartments = @{
-                Url            = "$($actionContext.Configuration.BaseUrl)/api2/departments?name=$($actionContext.Data.mapping.departmentId)&name=$($actionContext.Data.mapping.departmentId)"
+                Url            = "$($actionContext.Configuration.BaseUrl)/api2/departments?name=$($actionContext.Data.mapping.departmentId)"
                 Property       = 'departments'
                 PropertyId     = $actionContext.Data.mapping.departmentId
                 SearchProperty = 'name'
@@ -208,21 +208,6 @@ try {
             $isValidationError = $true
             Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
         }
-
-        # try {
-        #     $splatGetLocations = @{
-        #         Url            = "$($actionContext.Configuration.BaseUrl)/api2/locations?name=$($actionContext.Data.mapping.locationId)"
-        #         Property       = 'locations'
-        #         PropertyId     = $actionContext.Data.mapping.locationId
-        #         SearchProperty = 'name'
-        #     }
-        #     $location = Get-FacilitorResource @splatGetLocations
-            
-        # }
-        # catch {
-        #     $isValidationError = $true
-        #     Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
-        # }
 
         if ($isValidationError) {
             throw 'Validation error'

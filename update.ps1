@@ -194,7 +194,7 @@ try {
     Write-Information "Lookup Cost Centre name"
     try {
         $splatGetCostcentres = @{
-            Url            = "$($actionContext.Configuration.BaseUrl)/api2/costcentres?name=$($actionContext.Data.mapping.costCenterId)&name=$($actionContext.Data.mapping.costCenterId)"
+            Url            = "$($actionContext.Configuration.BaseUrl)/api2/costcentres?name=$($actionContext.Data.mapping.costCenterId)"
             Property       = 'costcentres'
             PropertyId     = $actionContext.Data.mapping.costCenterId
             SearchProperty = 'name'
@@ -215,7 +215,7 @@ try {
     Write-Information "Lookup Department via Mapping"
     try {
         $splatGetDepartments = @{
-            Url            = "$($actionContext.Configuration.BaseUrl)/api2/departments?name=$($actionContext.Data.mapping.departmentId)&name=$($actionContext.Data.mapping.departmentId)"
+            Url            = "$($actionContext.Configuration.BaseUrl)/api2/departments?name=$($actionContext.Data.mapping.departmentId)"
             Property       = 'departments'
             PropertyId     = $actionContext.Data.mapping.departmentId
             SearchProperty = 'name'
@@ -234,26 +234,6 @@ try {
         Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
     }
 
-    # Write-Information "Lookup Location via Mapping"
-    # try {
-    #     if (-not ([string]::IsNullOrEmpty($actionContext.Data.mapping.locationId))) {
-    #         $splatGetLocations = @{
-    #             Url            = "$($actionContext.Configuration.BaseUrl)/api2/locations?name=$($actionContext.Data.mapping.locationId)"
-    #             Property       = 'locations'
-    #             PropertyId     = $actionContext.Data.mapping.locationId
-    #             SearchProperty = 'name'
-    #         }
-    #         $location = Get-FacilitorResource @splatGetLocations
-    #     }
-    #     else {
-    #         Write-Information "LocationId (name) is empty lookup skiped"
-    #     }
-        
-    # }
-    # catch {
-    #     $isValidationError = $true
-    #     Add-AuditLog -ErrorMessage "$($_.Exception.message)" -IsError $true             
-    # }
 
     if ($isValidationError) {
         throw 'Validation error'
@@ -287,12 +267,6 @@ try {
         if ($correlatedAccount.function.name -ne $actionContext.data.function.name) {
             $propertiesChanged['function'] = $actionContext.Data.function
         }
-
-        # only select location custom field for compared
-        # $correlatedAccount.custom_fields = @($correlatedAccount.custom_fields | Where-Object { $_.propertyid -eq 1060 })
-        # if ([string]$correlatedAccount.custom_fields.value -ne $actionContext.data.custom_fields.value) {
-        #     $propertiesChanged['custom_fields'] = $actionContext.Data.custom_fields
-        # }
 
         if ($($propertiesChanged.Keys).count -gt 0) {
             $action = 'UpdateAccount'

@@ -199,23 +199,6 @@
           "StoreInAccountData": false
         }
       ]
-    },
-    {
-      "Name": "mapping.locationId",
-      "Description": "",
-      "Type": "Text",
-      "MappingActions": [
-        {
-          "MapForActions": [
-            "Create",
-            "Update"
-          ],
-          "MappingMode": "Fixed",
-          "Value": "\"<customer>\"",
-          "UsedInNotifications": false,
-          "StoreInAccountData": false
-        }
-      ]
     }
   ],
   "UniqueFieldNames": []
