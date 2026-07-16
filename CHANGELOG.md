@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. The format 
 ### Changed
 - Location information and custom_fields deleted from code (this was custom made)
 - Basic connector is now usable without extra adjustments to the code
+- Minor changes
 
 
 ## [1.1.0] - 29-07-2024
