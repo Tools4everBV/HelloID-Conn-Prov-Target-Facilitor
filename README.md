@@ -103,16 +103,9 @@ To properly set up the correlation:
 > [!IMPORTANT]
 > Granting and revoking groups is done by editing Facilitor persons after receiving the groups. For this reason, the concurrent actions need to be set to `1`.
 
-#### Custom field
+#### Cost centre and department
 
-The connector uses a custom field for populating the location field, the custom field used for this is identified by the ID `1060` and labeled `Locatie ID`. This is because the existing location field for the person corresponds to the preferred location of that person, not the location where the person works. Facilitor uses a daily running script that reads the custom field to fill the location where the person works.
-
-> [!IMPORTANT]
-> `custom_fields` are mapped in the powershell `create.ps1` and `update.ps1` script. Make sure you get the right `propertyid` from Facilitor. In the current script `1060` is used.
-
-#### Cost centre, department and location
-
-The field mapping contains a mapping object where the cost centre, department and location are populated with either the ID or the name of the corresponding object in the primary contract. This mapping object is used in the create and update lifecycle for validation.
+The field mapping contains a mapping object where the cost centre, department are populated with either the ID or the name of the corresponding object in the primary contract. This mapping object is used in the create and update lifecycle for validation.
 
 The validation process works as follows: the value from the mapping object is looked up in Faciltor and retrieves the corresponding ID of the object in Facilitor. By default on `name` or `visitzipcode`. If something goes wrong during validation, the connector will return a validation error. You can edit the `SearchProperty` in the  `create.ps1` and `update.ps1` script. Example:
 
